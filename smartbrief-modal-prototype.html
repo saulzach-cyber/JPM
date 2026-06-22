@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SmartBrief Modal — Prototype</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f1117;
+    color: #e2e8f0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 24px;
+    gap: 24px;
+  }
+
+  /* ─── Prototype label ─── */
+  .proto-label {
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #64748b;
+    align-self: flex-start;
+  }
+
+  /* ─── Calendar card (trigger surface) ─── */
+  .calendar-card {
+    background: #1a1f2e;
+    border: 1px solid #2a3044;
+    border-radius: 12px;
+    padding: 20px;
+    width: 100%;
+    max-width: 520px;
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .card-title { font-size: 15px; font-weight: 600; color: #f1f5f9; }
+  .card-date  { font-size: 12px; color: #64748b; }
+
+  .meeting-row {
+    border: 1px solid #2a3044;
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #111827;
+    cursor: default;
+  }
+
+  .meeting-time {
+    font-size: 11px;
+    color: #64748b;
+    min-width: 52px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .meeting-info { flex: 1; }
+  .meeting-title { font-size: 14px; font-weight: 600; color: #f1f5f9; margin-bottom: 2px; }
+  .meeting-sub   { font-size: 12px; color: #64748b; }
+
+  .smartbrief-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all .15s ease;
+    white-space: nowrap;
+  }
+  .smartbrief-btn:hover {
+    background: #243048;
+    border-color: #4f6ea8;
+    color: #e2e8f0;
+  }
+  .smartbrief-btn svg { flex-shrink: 0; }
+
+  /* ─── Hint text ─── */
+  .hint { font-size: 12px; color: #475569; text-align: center; }
+
+  /* ─── Overlay ─── */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.65);
+    backdrop-filter: blur(3px);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .overlay.open { display: flex; }
+
+  /* ─── Modal ─── */
+  .modal {
+    background: #1a1f2e;
+    border: 1px solid #2a3044;
+    border-radius: 14px;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 24px 64px rgba(0,0,0,.6);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: slideUp .2s ease;
+  }
+  @keyframes slideUp {
+    from { opacity:0; transform: translateY(12px) scale(.98); }
+    to   { opacity:1; transform: translateY(0) scale(1); }
+  }
+
+  /* Modal header */
+  .modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 20px 20px 0;
+  }
+  .modal-header-left { display: flex; flex-direction: column; gap: 4px; }
+  .modal-eyebrow {
+    font-size: 10px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #4f80c8;
+    font-weight: 600;
+  }
+  .modal-title { font-size: 16px; font-weight: 700; color: #f1f5f9; }
+  .modal-meta  { font-size: 12px; color: #64748b; margin-top: 1px; }
+
+  .close-btn {
+    background: #242b3d;
+    border: 1px solid #2a3044;
+    border-radius: 6px;
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: #64748b; flex-shrink: 0;
+    transition: all .15s;
+  }
+  .close-btn:hover { background: #2e3a52; color: #e2e8f0; }
+
+  .modal-divider { height: 1px; background: #2a3044; margin: 16px 0 0; }
+
+  /* Modal body */
+  .modal-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 20px; }
+
+  /* Section label */
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 8px;
+  }
+
+  /* ─── Level selector ─── */
+  .level-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .level-card {
+    border: 1.5px solid #2a3044;
+    border-radius: 10px;
+    padding: 12px 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: all .15s ease;
+    background: #111827;
+    position: relative;
+  }
+  .level-card:hover { border-color: #4f6ea8; background: #161d2e; }
+  .level-card.selected {
+    border-color: #4f80c8;
+    background: #172039;
+  }
+  .level-card.selected .level-check { opacity: 1; }
+
+  .level-icon { font-size: 22px; margin-bottom: 6px; }
+  .level-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin-bottom: 3px;
+  }
+  .level-desc { font-size: 10px; color: #64748b; line-height: 1.4; }
+
+  .level-check {
+    position: absolute;
+    top: 8px; right: 8px;
+    width: 16px; height: 16px;
+    background: #4f80c8;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    transition: opacity .15s;
+  }
+  .level-check svg { display: block; }
+
+  /* ─── Attendee section ─── */
+  .attendees-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .attendee-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: #111827;
+    border: 1px solid #2a3044;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .attendee-row:hover { border-color: #334155; }
+  .attendee-row.checked { border-color: #2d4a7a; background: #131e30; }
+
+  .attendee-avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .attendee-name  { font-size: 13px; font-weight: 500; color: #e2e8f0; flex: 1; }
+  .attendee-role  { font-size: 11px; color: #64748b; }
+
+  .attendee-checkbox {
+    width: 18px; height: 18px;
+    border-radius: 4px;
+    border: 1.5px solid #334155;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+  }
+  .attendee-row.checked .attendee-checkbox {
+    background: #4f80c8;
+    border-color: #4f80c8;
+  }
+
+  /* Search box */
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #111827;
+    border: 1px solid #2a3044;
+    border-radius: 8px;
+    padding: 8px 12px;
+    transition: border-color .15s;
+  }
+  .search-box:focus-within { border-color: #4f6ea8; }
+  .search-box input {
+    background: none;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    color: #e2e8f0;
+    width: 100%;
+  }
+  .search-box input::placeholder { color: #475569; }
+  .search-box svg { color: #475569; flex-shrink: 0; }
+
+  /* ─── Brief scope note ─── */
+  .scope-note {
+    display: flex;
+    gap: 8px;
+    background: #0f1824;
+    border: 1px solid #1e3a5f;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: #7db3e8;
+    line-height: 1.5;
+    align-items: flex-start;
+  }
+  .scope-note svg { flex-shrink: 0; margin-top: 1px; }
+
+  /* ─── Modal footer ─── */
+  .modal-footer {
+    padding: 0 20px 20px;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .btn-secondary {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 9px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .btn-secondary:hover { background: #243048; color: #e2e8f0; }
+
+  .btn-primary {
+    background: #2563eb;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    transition: all .15s;
+  }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-primary:disabled { background: #1e3a6b; color: #64748b; cursor: not-allowed; }
+
+  /* ─── Success state ─── */
+  .success-modal {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 24px;
+    text-align: center;
+    gap: 12px;
+  }
+  .success-modal.open { display: flex; }
+  .main-flow.hidden { display: none; }
+
+  .success-icon {
+    width: 56px; height: 56px;
+    background: #14532d;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 4px;
+  }
+  .success-title { font-size: 16px; font-weight: 700; color: #f1f5f9; }
+  .success-sub   { font-size: 13px; color: #64748b; max-width: 280px; line-height: 1.6; }
+
+  .btn-done {
+    margin-top: 8px;
+    background: #2563eb;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 28px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-done:hover { background: #1d4ed8; }
+
+  /* Loading spinner */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    display: none;
+  }
+  .btn-primary.loading .spinner { display: block; }
+  .btn-primary.loading .btn-label { display: none; }
+</style>
+</head>
+<body>
+
+<div class="proto-label">Prototype · SmartBrief Modal · JPM Sales Engagement Platform</div>
+
+<!-- Calendar card -->
+<div class="calendar-card">
+  <div class="card-header">
+    <span class="card-title">Smart Brief Calendar</span>
+    <span class="card-date">Tue · Jun 16</span>
+  </div>
+
+  <div class="meeting-row">
+    <span class="meeting-time">10:30 AM</span>
+    <div class="meeting-info">
+      <div class="meeting-title">M. Chen — JEPI strategy review</div>
+      <div class="meeting-sub">Chase Wealth Manhattan</div>
+    </div>
+    <button class="smartbrief-btn" onclick="openModal()">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+      </svg>
+      Smart Brief
+    </button>
+  </div>
+</div>
+
+<div class="hint">↑ Click "Smart Brief" to open the modal</div>
+
+
+<!-- ─────────────────────────────── MODAL ─────────────────────────────── -->
+<div class="overlay" id="overlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modal">
+
+    <!-- Main flow -->
+    <div class="main-flow" id="mainFlow">
+
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <span class="modal-eyebrow">⚡ Smart Brief</span>
+          <div class="modal-title">M. Chen — JEPI Strategy Review</div>
+          <div class="modal-meta">Chase Wealth Manhattan · 10:30 AM</div>
+        </div>
+        <button class="close-btn" onclick="closeModal()" aria-label="Close">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path d="M18 6 6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-divider"></div>
+
+      <div class="modal-body">
+
+        <!-- Level selector -->
+        <div>
+          <div class="section-label">Brief level</div>
+          <div class="level-grid">
+
+            <div class="level-card" id="level-account" onclick="selectLevel('account')">
+              <div class="level-check">
+                <svg width="9" height="9" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+              </div>
+              <div class="level-icon">🏢</div>
+              <div class="level-name">Account</div>
+              <div class="level-desc">Full firm overview, AUM, history &amp; opportunities</div>
+            </div>
+
+            <div class="level-card selected" id="level-contact" onclick="selectLevel('contact')">
+              <div class="level-check">
+                <svg width="9" height="9" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+              </div>
+              <div class="level-icon">👤</div>
+              <div class="level-name">Contact</div>
+              <div class="level-desc">Individual profile, preferences &amp; relationship notes</div>
+            </div>
+
+            <div class="level-card" id="level-meeting" onclick="selectLevel('meeting')">
+              <div class="level-check">
+                <svg width="9" height="9" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+              </div>
+              <div class="level-icon">📋</div>
+              <div class="level-name">Meeting</div>
+              <div class="level-desc">Agenda, talking points &amp; pre-meeting context</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Attendees -->
+        <div>
+          <div class="section-label">Run brief for</div>
+
+          <div class="attendees-list" id="attendeeList">
+
+            <div class="attendee-row checked" onclick="toggleAttendee(this)">
+              <div class="attendee-avatar" style="background:#1e3a6b; color:#7db3e8;">MC</div>
+              <div style="flex:1">
+                <div class="attendee-name">Margaret Chen</div>
+                <div class="attendee-role">Portfolio Manager · Chase Wealth Manhattan</div>
+              </div>
+              <div class="attendee-checkbox">
+                <svg width="10" height="10" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+              </div>
+            </div>
+
+            <div class="attendee-row checked" onclick="toggleAttendee(this)">
+              <div class="attendee-avatar" style="background:#1e3a1e; color:#6ee77d;">CA</div>
+              <div style="flex:1">
+                <div class="attendee-name">CA Jane Wilson</div>
+                <div class="attendee-role">Client Associate · Chase Wealth Manhattan</div>
+              </div>
+              <div class="attendee-checkbox">
+                <svg width="10" height="10" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+              </div>
+            </div>
+
+            <div class="attendee-row checked" onclick="toggleAttendee(this)">
+              <div class="attendee-avatar" style="background:#3a1e1e; color:#e77d7d;">JC</div>
+              <div style="flex:1">
+                <div class="attendee-name">James Chen</div>
+                <div class="attendee-role">Internal Client Advisor · JPMC Asset Management</div>
+              </div>
+              <div class="attendee-checkbox">
+                <svg width="10" height="10" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Search -->
+          <div class="search-box">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input type="text" placeholder="Search contacts to add…" id="searchInput" oninput="handleSearch(this.value)" />
+          </div>
+
+          <!-- Search results -->
+          <div id="searchResults" style="margin-top:6px; display:none; flex-direction:column; gap:4px;"></div>
+        </div>
+
+        <!-- Scope note -->
+        <div class="scope-note" id="scopeNote">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+          </svg>
+          <span id="scopeText">Brief will cover each selected contact's individual profile, preferences, and relationship history.</span>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn-primary" id="generateBtn" onclick="generate()">
+          <span class="btn-label">Generate Brief</span>
+          <div class="spinner"></div>
+        </button>
+      </div>
+
+    </div><!-- /main-flow -->
+
+    <!-- Success state -->
+    <div class="success-modal" id="successState">
+      <div class="success-icon">
+        <svg width="26" height="26" fill="none" stroke="#4ade80" stroke-width="2.5" viewBox="0 0 24 24">
+          <path d="M20 6 9 17l-5-5"/>
+        </svg>
+      </div>
+      <div class="success-title">Brief Generated</div>
+      <div class="success-sub" id="successText">Your Meeting-level SmartBrief for <strong>Margaret Chen</strong> is ready.</div>
+      <button class="btn-primary" style="margin-top:8px; padding: 10px 28px;" onclick="closeModal()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+        </svg>
+        <span class="btn-label">Open Brief</span>
+      </button>
+      <button class="btn-secondary" onclick="closeModal()" style="margin-top:4px;">Done</button>
+    </div>
+
+  </div><!-- /modal -->
+</div><!-- /overlay -->
+
+
+<script>
+  // ── State
+  let selectedLevel = 'contact';
+  const extraContacts = [
+    { initials: 'DP', name: 'David Park', role: 'Senior Advisor · Chase Wealth', color: '#2a1e3a', text: '#b97de8' },
+    { initials: 'SL', name: 'Sarah Lin', role: 'Analyst · Chase Wealth Manhattan', color: '#1e2e3a', text: '#7db8e8' },
+    { initials: 'TW', name: 'Tom Wu', role: 'Director · Chase Wealth Manhattan', color: '#3a2e1e', text: '#e8c07d' },
+  ];
+
+  const scopeTexts = {
+    account: 'Brief will cover the full firm profile, AUM, product holdings, trade history, and open opportunities for Chase Wealth Manhattan.',
+    contact: 'Brief will cover each selected contact\'s individual profile, preferences, and relationship history.',
+    meeting: 'Brief will generate tailored agenda, talking points, and key context for each selected attendee ahead of this meeting.',
+  };
+
+  // ── Modal open/close
+  function openModal() {
+    document.getElementById('overlay').classList.add('open');
+  }
+
+  function closeModal() {
+    const overlay = document.getElementById('overlay');
+    overlay.classList.remove('open');
+    // Reset success
+    setTimeout(() => {
+      document.getElementById('mainFlow').classList.remove('hidden');
+      document.getElementById('successState').classList.remove('open');
+      const btn = document.getElementById('generateBtn');
+      btn.classList.remove('loading');
+      btn.disabled = false;
+    }, 300);
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target === document.getElementById('overlay')) closeModal();
+  }
+
+  // ── Level selection
+  function selectLevel(level) {
+    selectedLevel = level;
+    ['account','contact','meeting'].forEach(l => {
+      document.getElementById('level-' + l).classList.toggle('selected', l === level);
+    });
+    document.getElementById('scopeText').textContent = scopeTexts[level];
+  }
+
+  // ── Attendee toggle
+  function toggleAttendee(row) {
+    row.classList.toggle('checked');
+  }
+
+  // ── Search
+  function handleSearch(val) {
+    const container = document.getElementById('searchResults');
+    if (!val.trim()) { container.style.display = 'none'; return; }
+    const filtered = extraContacts.filter(c =>
+      c.name.toLowerCase().includes(val.toLowerCase())
+    );
+    if (!filtered.length) { container.style.display = 'none'; return; }
+    container.innerHTML = filtered.map(c => `
+      <div class="attendee-row" style="cursor:pointer;" onclick="addContact(this, '${c.initials}', '${c.name}', '${c.role}', '${c.color}', '${c.text}')">
+        <div class="attendee-avatar" style="background:${c.color}; color:${c.text};">${c.initials}</div>
+        <div style="flex:1">
+          <div class="attendee-name">${c.name}</div>
+          <div class="attendee-role">${c.role}</div>
+        </div>
+        <svg width="14" height="14" fill="none" stroke="#4f80c8" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/>
+        </svg>
+      </div>
+    `).join('');
+    container.style.display = 'flex';
+  }
+
+  function addContact(row, initials, name, role, color, text) {
+    const list = document.getElementById('attendeeList');
+    const existing = [...list.querySelectorAll('.attendee-name')].map(n => n.textContent);
+    if (existing.includes(name)) return;
+
+    const el = document.createElement('div');
+    el.className = 'attendee-row checked';
+    el.onclick = () => el.classList.toggle('checked');
+    el.innerHTML = `
+      <div class="attendee-avatar" style="background:${color}; color:${text};">${initials}</div>
+      <div style="flex:1">
+        <div class="attendee-name">${name}</div>
+        <div class="attendee-role">${role}</div>
+      </div>
+      <div class="attendee-checkbox">
+        <svg width="10" height="10" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+      </div>
+    `;
+    list.appendChild(el);
+
+    document.getElementById('searchInput').value = '';
+    document.getElementById('searchResults').style.display = 'none';
+  }
+
+  // ── Generate
+  function generate() {
+    const checked = document.querySelectorAll('#attendeeList .attendee-row.checked');
+    if (!checked.length) return;
+
+    const btn = document.getElementById('generateBtn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    const names = [...checked].map(r => r.querySelector('.attendee-name').textContent);
+    const levelLabel = selectedLevel.charAt(0).toUpperCase() + selectedLevel.slice(1);
+
+    setTimeout(() => {
+      document.getElementById('mainFlow').classList.add('hidden');
+      const successEl = document.getElementById('successState');
+      successEl.classList.add('open');
+
+      const nameStr = names.length === 1
+        ? `<strong>${names[0]}</strong>`
+        : names.length === 2
+          ? `<strong>${names[0]}</strong> and <strong>${names[1]}</strong>`
+          : `<strong>${names[0]}</strong> and ${names.length - 1} others`;
+
+      document.getElementById('successText').innerHTML =
+        `Your ${levelLabel}-level SmartBrief for ${nameStr} is ready.`;
+    }, 1800);
+  }
+</script>
+</body>
+</html>
