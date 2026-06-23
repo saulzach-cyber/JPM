@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SmartBrief Calendar — JPM Prototype</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f0f2f5;
+  color: #1e293b;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 16px 60px;
+  gap: 16px;
+}
+
+/* ── proto bar ── */
+.proto-bar {
+  width: 100%; max-width: 600px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #dde1e7;
+}
+.proto-bar-label { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #94a3b8; }
+.proto-bar-tag {
+  font-size: 10px; background: #fff; border: 1px solid #e2e8f0;
+  border-radius: 4px; padding: 2px 8px; color: #94a3b8;
+}
+
+/* ── CARD ── */
+.card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  width: 100%; max-width: 600px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  overflow: hidden;
+}
+
+.card-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 18px 20px 0;
+}
+.card-header-left { display: flex; flex-direction: column; gap: 2px; }
+.card-title { font-size: 15px; font-weight: 700; color: #0f172a; }
+.card-date  { font-size: 12px; color: #94a3b8; }
+
+.briefs-btn {
+  display: flex; align-items: center; gap: 5px;
+  background: #f8fafc; border: 1px solid #e2e8f0;
+  border-radius: 6px; padding: 5px 11px;
+  font-size: 12px; font-weight: 500; color: #2563eb;
+  cursor: pointer; transition: background .15s;
+}
+.briefs-btn:hover { background: #eff6ff; border-color: #bfdbfe; }
+
+/* ── Tabs ── */
+.tabs {
+  display: flex; padding: 10px 20px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+.tab {
+  padding: 8px 14px; font-size: 13px; font-weight: 500;
+  color: #94a3b8; cursor: pointer; position: relative; transition: color .15s;
+}
+.tab.active { color: #0f172a; }
+.tab.active::after {
+  content: ''; position: absolute; bottom: -1px; left: 0; right: 0;
+  height: 2px; background: #2563eb; border-radius: 2px 2px 0 0;
+}
+.tab:hover:not(.active) { color: #475569; }
+
+/* ── Meeting rows ── */
+.meetings { display: flex; flex-direction: column; }
+
+.meeting-row {
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+}
+.meeting-row:last-child { border-bottom: none; }
+
+.meeting-collapsed {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 20px;
+  transition: background .12s;
+}
+.meeting-row:hover .meeting-collapsed { background: #f8fafc; }
+.meeting-row.open .meeting-collapsed {
+  background: #eff6ff;
+  border-left: 3px solid #2563eb;
+  padding-left: 17px;
+}
+
+.meeting-time {
+  font-size: 11px; color: #94a3b8;
+  min-width: 54px; font-variant-numeric: tabular-nums; flex-shrink: 0;
+}
+
+.meeting-info { flex: 1; min-width: 0; }
+.meeting-title {
+  font-size: 13px; font-weight: 600; color: #0f172a;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.meeting-sub { font-size: 11px; color: #94a3b8; margin-top: 1px; }
+
+.avatar-group { display: flex; align-items: center; flex-shrink: 0; }
+.avatar {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 1.5px solid #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 8px; font-weight: 700;
+  margin-left: -6px; flex-shrink: 0;
+}
+.avatar:first-child { margin-left: 0; }
+.avatar-overflow { background: #e2e8f0; color: #64748b; }
+
+.smartbrief-pill {
+  display: flex; align-items: center; gap: 5px;
+  background: #f8fafc; border: 1px solid #e2e8f0;
+  border-radius: 20px; padding: 4px 10px;
+  font-size: 11px; font-weight: 500; color: #2563eb;
+  cursor: pointer; flex-shrink: 0; transition: all .15s; margin-left: 10px;
+}
+.smartbrief-pill:hover { background: #eff6ff; border-color: #93c5fd; }
+.smartbrief-pill svg { flex-shrink: 0; }
+
+/* ── Expanded row ── */
+.meeting-expanded {
+  display: none;
+  padding: 0 20px 16px 17px;
+  background: #eff6ff;
+  border-left: 3px solid #2563eb;
+  flex-direction: column;
+}
+.meeting-row.open .meeting-expanded { display: flex; }
+
+.expanded-grid {
+  display: grid; grid-template-columns: 108px 1fr;
+  gap: 7px 12px; margin-bottom: 14px;
+}
+.exp-label {
+  font-size: 10px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: #94a3b8; padding-top: 1px;
+}
+.exp-value { font-size: 12px; color: #334155; line-height: 1.55; }
+.exp-value a { color: #2563eb; text-decoration: none; }
+.exp-value a:hover { text-decoration: underline; }
+
+.expanded-attendees-row { display: flex; gap: 5px; flex-wrap: wrap; }
+.attendee-chip {
+  display: flex; align-items: center; gap: 5px;
+  background: #fff; border: 1px solid #dbeafe;
+  border-radius: 20px; padding: 3px 8px 3px 4px;
+  font-size: 11px; color: #475569;
+}
+.chip-avatar {
+  width: 16px; height: 16px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 7px; font-weight: 700;
+}
+
+.exp-tag {
+  display: inline-flex; align-items: center;
+  background: #eff6ff; border: 1px solid #bfdbfe;
+  border-radius: 4px; padding: 2px 7px;
+  font-size: 10px; color: #2563eb;
+  margin-right: 4px; margin-bottom: 4px;
+}
+
+.expanded-actions {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid #dbeafe;
+}
+.action-link {
+  font-size: 12px; color: #94a3b8; cursor: pointer;
+  display: flex; align-items: center; gap: 4px;
+  background: none; border: none; transition: color .15s;
+}
+.action-link:hover { color: #475569; }
+
+.join-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: #2563eb; border: none; border-radius: 7px;
+  padding: 7px 16px; font-size: 12px; font-weight: 600;
+  color: #fff; cursor: pointer; transition: background .15s;
+}
+.join-btn:hover { background: #1d4ed8; }
+
+/* ── MODAL ── */
+.overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(15,23,42,.4);
+  backdrop-filter: blur(3px);
+  z-index: 200; align-items: center; justify-content: center; padding: 16px;
+}
+.overlay.open { display: flex; }
+
+.modal {
+  background: #fff; border: 1px solid #e2e8f0;
+  border-radius: 14px; width: 100%; max-width: 500px;
+  box-shadow: 0 20px 60px rgba(15,23,42,.15);
+  display: flex; flex-direction: column;
+  animation: rise .18s ease;
+  max-height: 90vh; overflow-y: auto;
+}
+@keyframes rise {
+  from { opacity:0; transform: translateY(10px) scale(.985); }
+  to   { opacity:1; transform: none; }
+}
+
+.modal-hd {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 20px 20px 0;
+}
+.modal-hd-left { display: flex; flex-direction: column; gap: 3px; }
+.modal-eyebrow {
+  font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+  color: #2563eb; font-weight: 700;
+  display: flex; align-items: center; gap: 5px;
+}
+.modal-title { font-size: 16px; font-weight: 700; color: #0f172a; }
+.modal-sub   { font-size: 12px; color: #94a3b8; }
+
+.modal-close {
+  background: #f8fafc; border: 1px solid #e2e8f0;
+  border-radius: 7px; width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: #94a3b8; flex-shrink: 0; transition: all .15s;
+}
+.modal-close:hover { background: #f1f5f9; color: #475569; }
+
+.modal-divider { height: 1px; background: #f1f5f9; margin: 16px 0 0; }
+.modal-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 20px; }
+
+.sec-label {
+  font-size: 10px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: #94a3b8; margin-bottom: 10px;
+}
+
+/* Level cards */
+.level-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+
+.level-card {
+  border: 1.5px solid #e2e8f0; border-radius: 10px;
+  padding: 13px 10px 11px; cursor: pointer; text-align: center;
+  transition: all .14s; background: #f8fafc; position: relative;
+}
+.level-card:hover { border-color: #93c5fd; background: #f0f8ff; }
+.level-card.active { border-color: #2563eb; background: #eff6ff; }
+
+.lc-check {
+  position: absolute; top: 7px; right: 7px;
+  width: 15px; height: 15px; background: #2563eb; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .14s;
+}
+.level-card.active .lc-check { opacity: 1; }
+
+.lc-icon { font-size: 20px; margin-bottom: 6px; }
+.lc-name { font-size: 12px; font-weight: 700; color: #0f172a; margin-bottom: 3px; }
+.lc-desc { font-size: 10px; color: #94a3b8; line-height: 1.4; }
+
+/* Scope note */
+.scope-note {
+  display: flex; gap: 8px; align-items: flex-start;
+  background: #eff6ff; border: 1px solid #bfdbfe;
+  border-radius: 8px; padding: 10px 12px;
+  font-size: 12px; color: #1d4ed8; line-height: 1.6;
+  margin-top: -8px;
+}
+.scope-note svg { flex-shrink: 0; margin-top: 1px; }
+
+/* ── Account view ── */
+.account-brief-card {
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;
+}
+.abc-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; border-bottom: 1px solid #f1f5f9;
+}
+.abc-logo {
+  width: 40px; height: 40px; background: #dbeafe; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800; color: #1d4ed8; flex-shrink: 0;
+}
+.abc-name { font-size: 14px; font-weight: 700; color: #0f172a; }
+.abc-sub  { font-size: 11px; color: #94a3b8; margin-top: 1px; }
+
+.abc-stats { display: grid; grid-template-columns: repeat(3,1fr); border-bottom: 1px solid #f1f5f9; }
+.abc-stat { padding: 12px 14px; border-right: 1px solid #f1f5f9; text-align: center; }
+.abc-stat:last-child { border-right: none; }
+.abc-stat-val { font-size: 15px; font-weight: 700; color: #0f172a; }
+.abc-stat-lbl { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+
+.abc-products { padding: 12px 16px; }
+.abc-prod-label {
+  font-size: 10px; font-weight: 700; color: #94a3b8;
+  text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px;
+}
+.product-tag {
+  display: inline-flex; align-items: center;
+  background: #eff6ff; border: 1px solid #bfdbfe;
+  border-radius: 5px; padding: 3px 8px;
+  font-size: 11px; color: #2563eb;
+  margin: 0 4px 4px 0;
+}
+
+.scope-toggles {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px 16px; border-top: 1px solid #f1f5f9;
+}
+.scope-toggle {
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+}
+.scope-toggle-check {
+  width: 16px; height: 16px; border-radius: 4px;
+  border: 1.5px solid #cbd5e1; background: #fff; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; transition: all .14s;
+}
+.scope-toggle.on .scope-toggle-check { background: #2563eb; border-color: #2563eb; }
+.scope-toggle-label { font-size: 12px; color: #334155; flex: 1; }
+.scope-toggle-sub   { font-size: 11px; color: #94a3b8; }
+
+/* ── Contact view ── */
+.contact-list { display: flex; flex-direction: column; gap: 6px; }
+
+.contact-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; background: #f8fafc;
+  border: 1.5px solid #e2e8f0; border-radius: 9px;
+  cursor: pointer; transition: all .14s;
+}
+.contact-row:hover { border-color: #93c5fd; background: #f0f8ff; }
+.contact-row.on { border-color: #2563eb; background: #eff6ff; }
+
+.contact-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+}
+.contact-name { font-size: 13px; font-weight: 600; color: #0f172a; }
+.contact-role { font-size: 11px; color: #94a3b8; margin-top: 1px; }
+
+.contact-badge {
+  margin-left: auto; font-size: 10px; font-weight: 600;
+  border-radius: 4px; padding: 2px 7px; flex-shrink: 0;
+}
+.badge-focus   { background: #fef9c3; color: #854d0e; border: 1px solid #fef08a; }
+.badge-notmet  { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+.badge-met     { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.badge-default { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+
+.contact-cb {
+  width: 18px; height: 18px; border-radius: 4px;
+  border: 1.5px solid #cbd5e1; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; transition: all .14s;
+  margin-left: 6px;
+}
+.contact-row.on .contact-cb { background: #2563eb; border-color: #2563eb; }
+
+.search-wrap {
+  display: flex; align-items: center; gap: 8px;
+  background: #f8fafc; border: 1px solid #e2e8f0;
+  border-radius: 8px; padding: 8px 12px; margin-top: 8px; transition: border-color .14s;
+}
+.search-wrap:focus-within { border-color: #93c5fd; background: #fff; }
+.search-wrap input {
+  background: none; border: none; outline: none;
+  font-size: 12px; color: #0f172a; width: 100%;
+}
+.search-wrap input::placeholder { color: #cbd5e1; }
+
+/* ── Meeting view ── */
+.meeting-brief-wrap { display: flex; flex-direction: column; gap: 10px; }
+
+.meeting-brief-header {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: #f8fafc; border: 1px solid #e2e8f0;
+  border-radius: 10px; padding: 14px 16px;
+}
+.mbh-icon {
+  width: 38px; height: 38px; background: #eff6ff; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.mbh-title  { font-size: 13px; font-weight: 700; color: #0f172a; }
+.mbh-sub    { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+.mbh-badges { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+.mbh-badge  { font-size: 10px; font-weight: 600; border-radius: 4px; padding: 2px 7px; }
+.badge-blue  { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.badge-green { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.badge-amber { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+
+.talking-points {
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;
+}
+.tp-header {
+  padding: 11px 16px; font-size: 10px; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase; color: #94a3b8;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex; align-items: center; gap: 6px;
+}
+.tp-list { display: flex; flex-direction: column; }
+
+.tp-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 16px; border-bottom: 1px solid #f8fafc;
+  cursor: pointer; transition: background .12s;
+}
+.tp-item:last-child { border-bottom: none; }
+.tp-item:hover { background: #f1f5f9; }
+.tp-item.on { background: #f0fdf4; }
+
+.tp-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: #cbd5e1;
+  flex-shrink: 0; margin-top: 5px;
+}
+.tp-item.on .tp-dot { background: #22c55e; }
+.tp-text { font-size: 12px; color: #334155; line-height: 1.55; flex: 1; }
+
+.tp-cb {
+  width: 16px; height: 16px; border-radius: 4px;
+  border: 1.5px solid #cbd5e1; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; transition: all .14s;
+}
+.tp-item.on .tp-cb { background: #22c55e; border-color: #22c55e; }
+
+/* ── Modal footer ── */
+.modal-ft { padding: 0 20px 20px; display: flex; gap: 8px; justify-content: flex-end; }
+
+.btn-cancel {
+  background: #f8fafc; border: 1px solid #e2e8f0;
+  border-radius: 8px; padding: 9px 18px;
+  font-size: 13px; font-weight: 500; color: #64748b;
+  cursor: pointer; transition: all .14s;
+}
+.btn-cancel:hover { background: #f1f5f9; color: #334155; }
+
+.btn-generate {
+  background: #2563eb; border: none; border-radius: 8px;
+  padding: 9px 20px; font-size: 13px; font-weight: 700; color: #fff;
+  cursor: pointer; display: flex; align-items: center; gap: 7px; transition: background .14s;
+}
+.btn-generate:hover { background: #1d4ed8; }
+.btn-generate:disabled { background: #bfdbfe; cursor: not-allowed; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin {
+  width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.35);
+  border-top-color: #fff; border-radius: 50%;
+  animation: spin .6s linear infinite; display: none;
+}
+.btn-generate.loading .spin { display: block; }
+.btn-generate.loading .gen-label { display: none; }
+
+/* ── Success ── */
+.modal-success {
+  display: none; flex-direction: column; align-items: center;
+  padding: 44px 24px; text-align: center; gap: 10px;
+}
+.modal-success.open { display: flex; }
+.main-flow.gone { display: none; }
+
+.success-ring {
+  width: 58px; height: 58px; border-radius: 50%;
+  background: #f0fdf4; border: 2px solid #bbf7d0;
+  display: flex; align-items: center; justify-content: center; margin-bottom: 4px;
+}
+.success-title { font-size: 16px; font-weight: 700; color: #0f172a; }
+.success-body  { font-size: 12px; color: #64748b; max-width: 290px; line-height: 1.7; }
+
+.btn-open {
+  margin-top: 10px; background: #2563eb; border: none; border-radius: 8px;
+  padding: 10px 28px; font-size: 13px; font-weight: 700; color: #fff;
+  cursor: pointer; display: flex; align-items: center; gap: 7px; transition: background .14s;
+}
+.btn-open:hover { background: #1d4ed8; }
+.btn-close-success {
+  background: none; border: none; font-size: 12px; color: #94a3b8;
+  cursor: pointer; transition: color .14s;
+}
+.btn-close-success:hover { color: #64748b; }
+</style>
+</head>
+<body>
+
+<div class="proto-bar">
+  <span class="proto-bar-label">Prototype · SmartBrief Calendar · JPM Sales Engagement</span>
+  <span class="proto-bar-tag">Click any "Smart Brief" button →</span>
+</div>
+
+<!-- ══════════════ CALENDAR CARD ══════════════ -->
+<div class="card">
+
+  <div class="card-header">
+    <div class="card-header-left">
+      <div class="card-title">Smart Brief Calendar</div>
+      <div class="card-date">Tue · Jun 16</div>
+    </div>
+    <button class="briefs-btn">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+      </svg>
+      Briefs
+    </button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this)">Today</div>
+    <div class="tab" onclick="switchTab(this)">Tomorrow</div>
+    <div class="tab" onclick="switchTab(this)">Week</div>
+  </div>
+
+  <div class="meetings">
+
+    <!-- 9:00 AM – Internal prep -->
+    <div class="meeting-row" onclick="toggleMeeting(this)">
+      <div class="meeting-collapsed">
+        <span class="meeting-time">9:00 AM</span>
+        <div class="meeting-info">
+          <div class="meeting-title">Prep — JPMC Manhattan top accounts</div>
+          <div class="meeting-sub">Internal · James Chen</div>
+        </div>
+        <div class="avatar-group">
+          <div class="avatar" style="background:#fee2e2;color:#b91c1c;">JC</div>
+        </div>
+        <button class="smartbrief-pill" onclick="openModal(event,'m1','Prep — JPMC Manhattan top accounts','Internal · 9:00 AM')">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          Smart Brief
+        </button>
+      </div>
+      <div class="meeting-expanded">
+        <div class="expanded-grid">
+          <span class="exp-label">Type</span>
+          <span class="exp-value">Internal Prep · No external attendees</span>
+
+          <span class="exp-label">Accounts</span>
+          <div class="exp-value">
+            <span class="exp-tag">Chase Wealth Manhattan</span>
+            <span class="exp-tag">Sentinel Wealth A22-North</span>
+            <span class="exp-tag">Cascade Private A17-Green</span>
+            <span class="exp-tag">+4 more</span>
+          </div>
+
+          <span class="exp-label">Prepared by</span>
+          <span class="exp-value">James Chen · Auto-generated from AUM alerts</span>
+
+          <span class="exp-label">Focus areas</span>
+          <span class="exp-value">JEPI inflows, idle cash candidates, June 22 Fixed Income outlook attendees</span>
+        </div>
+        <div class="expanded-actions">
+          <button class="action-link" onclick="event.stopPropagation()">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            Reschedule or cancel
+          </button>
+          <button class="join-btn" onclick="event.stopPropagation()">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+            Join
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10:30 AM – M. Chen JEPI (open by default) -->
+    <div class="meeting-row open" onclick="toggleMeeting(this)">
+      <div class="meeting-collapsed">
+        <span class="meeting-time">10:30 AM</span>
+        <div class="meeting-info">
+          <div class="meeting-title">M. Chen — JEPI strategy review</div>
+          <div class="meeting-sub">Chase Wealth Manhattan</div>
+        </div>
+        <div class="avatar-group">
+          <div class="avatar" style="background:#dbeafe;color:#1d4ed8;">MC</div>
+          <div class="avatar" style="background:#dcfce7;color:#166534;">CA</div>
+          <div class="avatar" style="background:#fee2e2;color:#b91c1c;">JC</div>
+        </div>
+        <button class="smartbrief-pill" onclick="openModal(event,'m2','M. Chen — JEPI Strategy Review','Chase Wealth Manhattan · 10:30 AM')">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          Smart Brief
+        </button>
+      </div>
+      <div class="meeting-expanded">
+        <div class="expanded-grid">
+          <span class="exp-label">Account</span>
+          <span class="exp-value">Chase Wealth Manhattan</span>
+
+          <span class="exp-label">Last meeting</span>
+          <span class="exp-value">May 28, 2026</span>
+
+          <span class="exp-label">All attendees</span>
+          <div class="exp-value">
+            <div class="expanded-attendees-row">
+              <div class="attendee-chip"><div class="chip-avatar" style="background:#dbeafe;color:#1d4ed8;">MC</div>Margaret Chen</div>
+              <div class="attendee-chip"><div class="chip-avatar" style="background:#dcfce7;color:#166534;">CA</div>CA Jane Wilson</div>
+              <div class="attendee-chip"><div class="chip-avatar" style="background:#fee2e2;color:#b91c1c;">JC</div>James Chen</div>
+            </div>
+          </div>
+
+          <span class="exp-label">Meeting link</span>
+          <span class="exp-value"><a href="#" onclick="return false;">zoom.us/j/8821-jepi</a></span>
+        </div>
+        <div class="expanded-actions">
+          <button class="action-link" onclick="event.stopPropagation()">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            Reschedule or cancel
+          </button>
+          <button class="join-btn" onclick="event.stopPropagation()">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+            Join
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 12:00 PM – CWM Regional sync -->
+    <div class="meeting-row" onclick="toggleMeeting(this)">
+      <div class="meeting-collapsed">
+        <span class="meeting-time">12:00 PM</span>
+        <div class="meeting-info">
+          <div class="meeting-title">CWM Regional sync</div>
+          <div class="meeting-sub">JPMorgan Chase Wealth Management</div>
+        </div>
+        <div class="avatar-group">
+          <div class="avatar" style="background:#f3e8ff;color:#7e22ce;">JR</div>
+          <div class="avatar" style="background:#e0f2fe;color:#075985;">AK</div>
+          <div class="avatar" style="background:#dcfce7;color:#166534;">TS</div>
+          <div class="avatar avatar-overflow">+2</div>
+        </div>
+        <button class="smartbrief-pill" onclick="openModal(event,'m3','CWM Regional Sync','JPMorgan Chase Wealth Management · 12:00 PM')">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          Smart Brief
+        </button>
+      </div>
+      <div class="meeting-expanded">
+        <div class="expanded-grid">
+          <span class="exp-label">Type</span>
+          <span class="exp-value">Internal Regional Sync · Chase Wealth Management</span>
+
+          <span class="exp-label">Organizer</span>
+          <span class="exp-value">Jessica Ramirez · Regional Director, CWM East</span>
+
+          <span class="exp-label">All attendees</span>
+          <div class="exp-value">
+            <div class="expanded-attendees-row">
+              <div class="attendee-chip"><div class="chip-avatar" style="background:#f3e8ff;color:#7e22ce;">JR</div>Jessica Ramirez</div>
+              <div class="attendee-chip"><div class="chip-avatar" style="background:#e0f2fe;color:#075985;">AK</div>Alex Kim</div>
+              <div class="attendee-chip"><div class="chip-avatar" style="background:#dcfce7;color:#166534;">TS</div>Tom Sato</div>
+              <div class="attendee-chip"><div class="chip-avatar" style="background:#fef9c3;color:#854d0e;">PR</div>Priya Rao</div>
+              <div class="attendee-chip"><div class="chip-avatar" style="background:#fee2e2;color:#b91c1c;">JC</div>James Chen</div>
+            </div>
+          </div>
+
+          <span class="exp-label">Agenda</span>
+          <span class="exp-value">Q2 pipeline review · June 22 Fixed Income event RSVPs · Territory rebalancing proposal</span>
+        </div>
+        <div class="expanded-actions">
+          <button class="action-link" onclick="event.stopPropagation()">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            Reschedule or cancel
+          </button>
+          <button class="join-btn" onclick="event.stopPropagation()">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+            Join
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3:30 PM – D. Okonkwo Core Bond -->
+    <div class="meeting-row" onclick="toggleMeeting(this)">
+      <div class="meeting-collapsed">
+        <span class="meeting-time">3:30 PM</span>
+        <div class="meeting-info">
+          <div class="meeting-title">D. Okonkwo — Core Bond conversation</div>
+          <div class="meeting-sub">JPMC Wealth · Chicago</div>
+        </div>
+        <div class="avatar-group">
+          <div class="avatar" style="background:#ccfbf1;color:#0f766e;">DO</div>
+          <div class="avatar" style="background:#fee2e2;color:#b91c1c;">JC</div>
+        </div>
+        <button class="smartbrief-pill" onclick="openModal(event,'m4','D. Okonkwo — Core Bond Conversation','JPMC Wealth · Chicago · 3:30 PM')">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          Smart Brief
+        </button>
+      </div>
+      <div class="meeting-expanded">
+        <div class="expanded-grid">
+          <span class="exp-label">Account</span>
+          <span class="exp-value">JPMC Wealth · Chicago</span>
+
+          <span class="exp-label">Last meeting</span>
+          <span class="exp-value">Apr 14, 2026 · 62 days ago</span>
+
+          <span class="exp-label">All attendees</span>
+          <div class="exp-value">
+            <div class="expanded-attendees-row">
+              <div class="attendee-chip"><div class="chip-avatar" style="background:#ccfbf1;color:#0f766e;">DO</div>David Okonkwo</div>
+              <div class="attendee-chip"><div class="chip-avatar" style="background:#fee2e2;color:#b91c1c;">JC</div>James Chen</div>
+            </div>
+          </div>
+
+          <span class="exp-label">Context</span>
+          <span class="exp-value">Mercer just added JPM Core Bond as a high-conviction window. First conversation — David not yet met YTD.</span>
+
+          <span class="exp-label">Meeting link</span>
+          <span class="exp-value"><a href="#" onclick="return false;">zoom.us/j/5504-jpmc</a></span>
+        </div>
+        <div class="expanded-actions">
+          <button class="action-link" onclick="event.stopPropagation()">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            Reschedule or cancel
+          </button>
+          <button class="join-btn" onclick="event.stopPropagation()">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+            Join
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /card -->
+
+
+<!-- ══════════════ MODAL ══════════════ -->
+<div class="overlay" id="overlay" onclick="handleOverlayClick(event)">
+<div class="modal" id="modal">
+
+  <div class="main-flow" id="mainFlow">
+
+    <div class="modal-hd">
+      <div class="modal-hd-left">
+        <div class="modal-eyebrow">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          Smart Brief
+        </div>
+        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-sub"   id="modalSub"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-divider"></div>
+
+    <div class="modal-body">
+
+      <div>
+        <div class="sec-label">Brief level</div>
+        <div class="level-grid">
+          <div class="level-card" id="lc-account" onclick="selectLevel('account')">
+            <div class="lc-check"><svg width="8" height="8" fill="none" stroke="#fff" stroke-width="3" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+            <div class="lc-icon">🏢</div>
+            <div class="lc-name">Account</div>
+            <div class="lc-desc">Firm overview, AUM, product holdings, trade history</div>
+          </div>
+          <div class="level-card active" id="lc-contact" onclick="selectLevel('contact')">
+            <div class="lc-check"><svg width="8" height="8" fill="none" stroke="#fff" stroke-width="3" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+            <div class="lc-icon">👤</div>
+            <div class="lc-name">Contact</div>
+            <div class="lc-desc">Individual profile, preferences, relationship notes</div>
+          </div>
+          <div class="level-card" id="lc-meeting" onclick="selectLevel('meeting')">
+            <div class="lc-check"><svg width="8" height="8" fill="none" stroke="#fff" stroke-width="3" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+            <div class="lc-icon">📋</div>
+            <div class="lc-name">Meeting</div>
+            <div class="lc-desc">Agenda, talking points, pre-call context</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scope-note" id="scopeNote">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <span id="scopeText"></span>
+      </div>
+
+      <div id="briefForSection"></div>
+
+    </div>
+
+    <div class="modal-ft">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-generate" id="genBtn" onclick="generate()">
+        <span class="gen-label">Generate Brief</span>
+        <div class="spin"></div>
+      </button>
+    </div>
+
+  </div><!-- /main-flow -->
+
+  <div class="modal-success" id="successState">
+    <div class="success-ring">
+      <svg width="26" height="26" fill="none" stroke="#22c55e" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+    </div>
+    <div class="success-title">Brief Ready</div>
+    <div class="success-body" id="successBody"></div>
+    <button class="btn-open" onclick="closeModal()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      Open Brief
+    </button>
+    <button class="btn-close-success" onclick="closeModal()">Done</button>
+  </div>
+
+</div>
+</div>
+
+
+<script>
+const MEETING_DATA = {
+  m1: {
+    account: {
+      scope: 'Brief will cover all 7 accounts flagged for this prep session — AUM, recent inflows, open opportunities, and next-best-action recommendations.',
+      firmName: 'JPMC Prep Session', firmSub: 'Internal · 7 accounts flagged',
+      aum: '—', contacts: '7', products: '12',
+      productTags: ['JEPI', 'JPM Core Bond', 'Income Builder', 'Equity SMA', 'MMF'],
+      scopes: [
+        { label: 'Include idle cash candidates', sub: '3 accounts >60d', on: true },
+        { label: 'Include NOT MET contacts',    sub: '5 contacts',      on: true },
+        { label: 'Include open opportunities',  sub: '8 open',          on: false },
+      ]
+    },
+    contact: {
+      scope: 'Select contacts across the 7 accounts to generate individual relationship briefs for each.',
+      contacts: [
+        { initials:'MC', name:'Margaret Chen',   role:'Portfolio Manager · Chase Wealth Manhattan', bg:'#dbeafe', fg:'#1d4ed8', badge:'FOCUS',       badgeCls:'badge-focus',  on:true  },
+        { initials:'DO', name:'David Okonkwo',   role:'Senior Advisor · JPMC Wealth Chicago',      bg:'#ccfbf1', fg:'#0f766e', badge:'NOT MET YTD', badgeCls:'badge-notmet', on:true  },
+        { initials:'SW', name:'Sarah Whitfield', role:'Advisor · Chase Wealth Manhattan',           bg:'#e0f2fe', fg:'#075985', badge:'FOCUS',       badgeCls:'badge-focus',  on:false },
+        { initials:'LP', name:'Lin Park',        role:'Portfolio Manager · WiseWealth A17-Green',   bg:'#f3e8ff', fg:'#7e22ce', badge:'NOT MET YTD', badgeCls:'badge-notmet', on:false },
+      ]
+    },
+    meeting: {
+      scope: "Brief will generate an internal prep agenda with key talking points across all flagged accounts for today's session.",
+      title: 'Prep — JPMC Manhattan top accounts', time: 'Internal · 9:00 AM',
+      badges: [{ text:'Internal', cls:'badge-blue' }, { text:'7 Accounts', cls:'badge-green' }, { text:'No recording', cls:'badge-amber' }],
+      points: [
+        { text: 'Review JEPI inflow momentum — Chase Wealth Manhattan up $1.42M yesterday', on:true },
+        { text: 'Flag idle cash candidates: Sentinel A22-North ($420K >60d) and WiseWealth A17-Green', on:true },
+        { text: 'Note June 22 Fixed Income outlook RSVPs — 4 confirmed from territory', on:true },
+        { text: 'David Okonkwo — Mercer added JPM Core Bond; first meeting NOT YET scheduled', on:false },
+        { text: 'Ridgeway Group proposal still outstanding — 6d past deadline, follow up today', on:false },
+      ]
+    }
+  },
+  m2: {
+    account: {
+      scope: 'Brief will cover the full Chase Wealth Manhattan firm profile — AUM, product holdings, trade history, and open opportunities across all contacts.',
+      firmName: 'Chase Wealth Manhattan', firmSub: 'JPMC Wealth · A11-East · FOCUS account',
+      aum: '$84.2M', contacts: '6', products: '4',
+      productTags: ['JPM Equity Income', 'JEPI', 'Income Builder', 'MMF'],
+      scopes: [
+        { label: 'Include all firm contacts',     sub: '6 contacts',  on: true  },
+        { label: 'Include recent trade activity', sub: 'Last 90 days', on: true  },
+        { label: 'Include open opportunities',    sub: '2 open',      on: false },
+      ]
+    },
+    contact: {
+      scope: 'Select individual contacts at Chase Wealth Manhattan to generate a tailored relationship brief for each person.',
+      contacts: [
+        { initials:'MC', name:'Margaret Chen', role:'Portfolio Manager · Chase Wealth Manhattan', bg:'#dbeafe', fg:'#1d4ed8', badge:'Primary',      badgeCls:'badge-focus',   on:true  },
+        { initials:'JW', name:'Jane Wilson',   role:'Client Associate · Chase Wealth Manhattan',  bg:'#dcfce7', fg:'#166534', badge:'Meeting inv.', badgeCls:'badge-met',     on:true  },
+        { initials:'RB', name:'Robert Baxter', role:'Director of Investments · Chase Wealth',     bg:'#fef9c3', fg:'#854d0e', badge:'',             badgeCls:'badge-default', on:false },
+        { initials:'HL', name:'Helen Liu',     role:'Senior Analyst · Chase Wealth Manhattan',    bg:'#f3e8ff', fg:'#7e22ce', badge:'',             badgeCls:'badge-default', on:false },
+      ]
+    },
+    meeting: {
+      scope: "Brief will generate agenda and talking points tailored to each attendee's profile for the 10:30 AM JEPI strategy review.",
+      title: 'M. Chen — JEPI Strategy Review', time: 'Chase Wealth Manhattan · 10:30 AM',
+      badges: [{ text:'JEPI Strategy', cls:'badge-blue' }, { text:'FOCUS Account', cls:'badge-green' }, { text:'14d since last meeting', cls:'badge-amber' }],
+      points: [
+        { text: 'JEPI position now $38.4M — up 12% MoM. At 46% of firm AUM, approaching concentration threshold', on:true },
+        { text: 'Idle cash: $420K in MMF for 60+ days. Present Income Builder as a diversification option', on:true },
+        { text: 'Last discussion (May 28): Margaret flagged interest in options-overlay strategies', on:true },
+        { text: 'Jane Wilson joined 3 months ago — acknowledge her role, confirm communication preferences', on:false },
+        { text: 'Bring Q2 JEPI commentary PDF and updated distribution yield comparison vs. peers', on:false },
+      ]
+    }
+  },
+  m3: {
+    account: {
+      scope: 'Brief will cover JPMorgan Chase Wealth Management as the internal account — Q2 pipeline metrics, regional performance, and upcoming territory changes.',
+      firmName: 'JPMorgan Chase Wealth Mgmt', firmSub: 'Internal · CWM East Region · Regional Sync',
+      aum: '$312M', contacts: '5', products: '—',
+      productTags: ['JEPI', 'Income Builder', 'Equity SMA', 'JPM Core Bond', 'MMF'],
+      scopes: [
+        { label: 'Include Q2 pipeline data',              sub: 'All advisors',   on: true  },
+        { label: 'Include event RSVP list',               sub: 'June 22 outlook', on: true  },
+        { label: 'Include territory rebalancing proposal', sub: 'Draft v2',       on: false },
+      ]
+    },
+    contact: {
+      scope: 'Generate individual prep notes for each internal attendee based on their territory performance and current priorities.',
+      contacts: [
+        { initials:'JR', name:'Jessica Ramirez', role:'Regional Director · CWM East',  bg:'#f3e8ff', fg:'#7e22ce', badge:'Organizer', badgeCls:'badge-focus',   on:true  },
+        { initials:'AK', name:'Alex Kim',         role:'Advisor · CWM East Territory', bg:'#e0f2fe', fg:'#075985', badge:'',          badgeCls:'badge-default', on:true  },
+        { initials:'TS', name:'Tom Sato',          role:'Advisor · CWM East Territory', bg:'#dcfce7', fg:'#166534', badge:'',          badgeCls:'badge-default', on:false },
+        { initials:'PR', name:'Priya Rao',         role:'Analyst · CWM East Territory', bg:'#fef9c3', fg:'#854d0e', badge:'',          badgeCls:'badge-default', on:false },
+      ]
+    },
+    meeting: {
+      scope: 'Brief will generate a structured regional sync agenda with key data points, action items, and context for each agenda topic.',
+      title: 'CWM Regional Sync', time: 'JPMorgan CWM East · 12:00 PM',
+      badges: [{ text:'Internal Sync', cls:'badge-blue' }, { text:'Q2 Review', cls:'badge-green' }, { text:'5 Attendees', cls:'badge-amber' }],
+      points: [
+        { text: 'Q2 YTD gross sales at $312M — 64% to $487M goal. Highlight JEPI inflows as primary driver', on:true },
+        { text: 'June 22 Fixed Income Outlook: 4 confirmed RSVPs from territory. Share attendee list for follow-up assignments', on:true },
+        { text: 'Territory rebalancing — Cascade Private and WiseWealth A17-Green accounts under review', on:true },
+        { text: 'Alex Kim: Ridgeway Group proposal still outstanding — coordinate handoff if needed', on:false },
+        { text: 'Tom Sato: 3 accounts with idle cash >60d flagged for MMF candidacy outreach this week', on:false },
+      ]
+    }
+  },
+  m4: {
+    account: {
+      scope: 'Brief will cover the full JPMC Wealth Chicago profile for David Okonkwo — AUM, Mercer window change, and JPM Core Bond positioning context.',
+      firmName: 'JPMC Wealth · Chicago', firmSub: 'A22-North · NOT MET YTD — First conversation',
+      aum: '$985K', contacts: '2', products: '1',
+      productTags: ['JEPI (via Mercer window)'],
+      scopes: [
+        { label: 'Include Mercer window update details', sub: 'Core Bond added', on: true  },
+        { label: 'Include past interaction history',     sub: 'Last met Apr 14', on: true  },
+        { label: 'Include competitive landscape',        sub: 'vs. Pimco/Vanguard', on: false },
+      ]
+    },
+    contact: {
+      scope: 'Generate a contact-level relationship brief for David Okonkwo ahead of this first JPM Core Bond conversation.',
+      contacts: [
+        { initials:'DO', name:'David Okonkwo', role:'Senior Advisor · JPMC Wealth Chicago',       bg:'#ccfbf1', fg:'#0f766e', badge:'NOT MET YTD', badgeCls:'badge-notmet',  on:true  },
+        { initials:'JC', name:'James Chen',    role:'Internal Client Advisor · JPMC Asset Mgmt',  bg:'#fee2e2', fg:'#b91c1c', badge:'You',         badgeCls:'badge-default', on:false },
+      ]
+    },
+    meeting: {
+      scope: 'Brief will generate a first-meeting agenda for David Okonkwo focused on JPM Core Bond — Mercer context, positioning, and relationship-building talking points.',
+      title: 'D. Okonkwo — Core Bond Conversation', time: 'JPMC Wealth Chicago · 3:30 PM',
+      badges: [{ text:'First Meeting', cls:'badge-amber' }, { text:'Core Bond', cls:'badge-blue' }, { text:'NOT MET YTD', cls:'badge-amber' }],
+      points: [
+        { text: "Open with Mercer context: Mercer added JPM Core Bond as a high-conviction window — acknowledge the tailwind", on:true },
+        { text: "David's current AUM: $985K, primarily in JEPI via Mercer window. Core Bond adds fixed income ballast option", on:true },
+        { text: "Last contact: Apr 14 phone call — no follow-through from prior advisor. Acknowledge the gap and reset", on:true },
+        { text: "Ask about David's fixed income allocation thesis and any duration constraints in his current book", on:false },
+        { text: "Leave behind: JPM Core Bond Q2 commentary + Morningstar rating card", on:false },
+      ]
+    }
+  }
+};
+
+let activeMeetingId = 'm2';
+let activeLevel = 'contact';
+
+function toggleMeeting(row) { row.classList.toggle('open'); }
+
+function switchTab(el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function openModal(e, meetingId, title, sub) {
+  e.stopPropagation();
+  activeMeetingId = meetingId;
+  activeLevel = 'contact';
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalSub').textContent   = sub;
+  ['account','contact','meeting'].forEach(l =>
+    document.getElementById('lc-'+l).classList.toggle('active', l === activeLevel));
+  renderBriefFor();
+  updateScopeNote();
+  document.getElementById('mainFlow').classList.remove('gone');
+  document.getElementById('successState').classList.remove('open');
+  const btn = document.getElementById('genBtn');
+  btn.classList.remove('loading');
+  btn.disabled = false;
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeModal() { document.getElementById('overlay').classList.remove('open'); }
+function handleOverlayClick(e) { if (e.target === document.getElementById('overlay')) closeModal(); }
+
+function selectLevel(level) {
+  activeLevel = level;
+  ['account','contact','meeting'].forEach(l =>
+    document.getElementById('lc-'+l).classList.toggle('active', l === level));
+  updateScopeNote();
+  renderBriefFor();
+}
+
+function updateScopeNote() {
+  document.getElementById('scopeText').textContent = MEETING_DATA[activeMeetingId][activeLevel].scope;
+}
+
+function renderBriefFor() {
+  const container = document.getElementById('briefForSection');
+  const d = MEETING_DATA[activeMeetingId];
+  if      (activeLevel === 'account')  renderAccountView(container, d.account);
+  else if (activeLevel === 'contact')  renderContactView(container, d.contact);
+  else                                  renderMeetingView(container, d.meeting);
+}
+
+function renderAccountView(container, data) {
+  const initials = data.firmName.split(' ').map(w=>w[0]).slice(0,2).join('');
+  container.innerHTML = `
+    <div class="sec-label">Run brief for</div>
+    <div class="account-brief-card">
+      <div class="abc-header">
+        <div class="abc-logo">${initials}</div>
+        <div><div class="abc-name">${data.firmName}</div><div class="abc-sub">${data.firmSub}</div></div>
+      </div>
+      <div class="abc-stats">
+        <div class="abc-stat"><div class="abc-stat-val">${data.aum}</div><div class="abc-stat-lbl">Firm AUM</div></div>
+        <div class="abc-stat"><div class="abc-stat-val">${data.contacts}</div><div class="abc-stat-lbl">Contacts</div></div>
+        <div class="abc-stat"><div class="abc-stat-val">${data.products}</div><div class="abc-stat-lbl">Products held</div></div>
+      </div>
+      <div class="abc-products">
+        <div class="abc-prod-label">Products on platform</div>
+        ${data.productTags.map(p=>`<span class="product-tag">${p}</span>`).join('')}
+      </div>
+      <div class="scope-toggles">
+        ${data.scopes.map(s=>`
+          <div class="scope-toggle ${s.on?'on':''}" onclick="toggleScopeItem(this)">
+            <div class="scope-toggle-check">${s.on?chk():''}</div>
+            <span class="scope-toggle-label">${s.label}</span>
+            <span class="scope-toggle-sub">${s.sub}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function renderContactView(container, data) {
+  container.innerHTML = `
+    <div class="sec-label">Run brief for</div>
+    <div class="contact-list">
+      ${data.contacts.map(c=>`
+        <div class="contact-row ${c.on?'on':''}" onclick="toggleContactRow(this)">
+          <div class="contact-avatar" style="background:${c.bg};color:${c.fg};">${c.initials}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="contact-name">${c.name}</div>
+            <div class="contact-role">${c.role}</div>
+          </div>
+          ${c.badge ? `<div class="contact-badge ${c.badgeCls}">${c.badge}</div>` : ''}
+          <div class="contact-cb">${c.on?chk():''}</div>
+        </div>`).join('')}
+    </div>
+    <div class="search-wrap">
+      <svg width="13" height="13" fill="none" stroke="#cbd5e1" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" placeholder="Search contacts to add…" />
+    </div>`;
+}
+
+function renderMeetingView(container, data) {
+  container.innerHTML = `
+    <div class="sec-label">Run brief for</div>
+    <div class="meeting-brief-wrap">
+      <div class="meeting-brief-header">
+        <div class="mbh-icon">📋</div>
+        <div style="flex:1;">
+          <div class="mbh-title">${data.title}</div>
+          <div class="mbh-sub">${data.time}</div>
+          <div class="mbh-badges">${data.badges.map(b=>`<span class="mbh-badge ${b.cls}">${b.text}</span>`).join('')}</div>
+        </div>
+      </div>
+      <div class="talking-points">
+        <div class="tp-header">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Select talking points to include
+        </div>
+        <div class="tp-list">
+          ${data.points.map(p=>`
+            <div class="tp-item ${p.on?'on':''}" onclick="toggleTpItem(this)">
+              <div class="tp-dot"></div>
+              <div class="tp-text">${p.text}</div>
+              <div class="tp-cb">${p.on?chk():''}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+function chk() {
+  return `<svg width="9" height="9" fill="none" stroke="#fff" stroke-width="3" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>`;
+}
+
+function toggleScopeItem(el) {
+  el.classList.toggle('on');
+  el.querySelector('.scope-toggle-check').innerHTML = el.classList.contains('on') ? chk() : '';
+}
+function toggleContactRow(el) {
+  el.classList.toggle('on');
+  el.querySelector('.contact-cb').innerHTML = el.classList.contains('on') ? chk() : '';
+}
+function toggleTpItem(el) {
+  el.classList.toggle('on');
+  el.querySelector('.tp-cb').innerHTML = el.classList.contains('on') ? chk() : '';
+}
+
+function generate() {
+  const btn = document.getElementById('genBtn');
+  btn.classList.add('loading');
+  btn.disabled = true;
+  const levelLabel = { account:'Account', contact:'Contact', meeting:'Meeting' }[activeLevel];
+  const d = MEETING_DATA[activeMeetingId];
+  let who = activeLevel === 'account' ? d.account.firmName
+           : activeLevel === 'meeting' ? d.meeting.title
+           : (d.contact.contacts.filter(c=>c.on).map(c=>c.name).join(', ') || 'selected contacts');
+  setTimeout(() => {
+    document.getElementById('mainFlow').classList.add('gone');
+    document.getElementById('successState').classList.add('open');
+    document.getElementById('successBody').innerHTML =
+      `Your <strong>${levelLabel}-level</strong> SmartBrief for <strong>${who}</strong> is ready to open.`;
+  }, 1800);
+}
+</script>
+</body>
+</html>

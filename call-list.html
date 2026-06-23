@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Create a Call List — JPM Prototype</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f0f2f5;
+  color: #1e293b;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+}
+.back-link {
+  position: fixed;
+  top: 24px; left: 24px;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 500; color: #64748b;
+  text-decoration: none;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 7px 14px;
+  transition: all .15s;
+}
+.back-link:hover { color: #2563eb; border-color: #93c5fd; }
+.placeholder-icon { font-size: 48px; margin-bottom: 8px; }
+.placeholder-title { font-size: 22px; font-weight: 700; color: #0f172a; }
+.placeholder-sub   { font-size: 14px; color: #94a3b8; margin-top: 6px; }
+.placeholder-badge {
+  margin-top: 16px;
+  font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  background: #fffbeb; color: #92400e; border: 1px solid #fde68a;
+  border-radius: 6px; padding: 5px 14px;
+}
+</style>
+</head>
+<body>
+  <a class="back-link" href="index.html">
+    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Back to concepts
+  </a>
+  <div class="placeholder-icon">📞</div>
+  <div class="placeholder-title">Create a Call List</div>
+  <div class="placeholder-sub">Interaction concept — coming soon</div>
+  <div class="placeholder-badge">In Progress</div>
+</body>
+</html>
