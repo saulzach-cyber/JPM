@@ -353,6 +353,7 @@ body {
 .badge-focus   { background: #fef9c3; color: #854d0e; border: 1px solid #fef08a; }
 .badge-notmet  { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
 .badge-met     { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.badge-amber   { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
 .badge-default { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
 
 .contact-cb {
@@ -758,19 +759,19 @@ body {
             <div class="lc-check"><svg width="8" height="8" fill="none" stroke="#fff" stroke-width="3" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
             <div class="lc-icon">🏢</div>
             <div class="lc-name">Account</div>
-            <div class="lc-desc">Firm overview, AUM, product holdings, trade history</div>
+            <div class="lc-desc" id="lc-account-desc">All contacts at the firm</div>
           </div>
           <div class="level-card active" id="lc-contact" onclick="selectLevel('contact')">
             <div class="lc-check"><svg width="8" height="8" fill="none" stroke="#fff" stroke-width="3" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
             <div class="lc-icon">👤</div>
             <div class="lc-name">Contact</div>
-            <div class="lc-desc">Individual profile, preferences, relationship notes</div>
+            <div class="lc-desc" id="lc-contact-desc">Meeting attendees + related contacts</div>
           </div>
           <div class="level-card" id="lc-meeting" onclick="selectLevel('meeting')">
             <div class="lc-check"><svg width="8" height="8" fill="none" stroke="#fff" stroke-width="3" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
             <div class="lc-icon">📋</div>
             <div class="lc-name">Meeting</div>
-            <div class="lc-desc">Agenda, talking points, pre-call context</div>
+            <div class="lc-desc" id="lc-meeting-desc">Only this meeting's attendees</div>
           </div>
         </div>
       </div>
@@ -812,140 +813,156 @@ body {
 
 
 <script>
+// ── Each meeting has three contact lists with different scopes:
+//    account  → everyone at the firm (broader than the meeting)
+//    contact  → meeting attendees + related contacts at other branches
+//    meeting  → only the people on this specific invite
 const MEETING_DATA = {
+
+  // ── M1: Internal prep ──────────────────────────────────────────────────
   m1: {
     account: {
-      scope: 'Brief will cover all 7 accounts flagged for this prep session — AUM, recent inflows, open opportunities, and next-best-action recommendations.',
-      firmName: 'JPMC Prep Session', firmSub: 'Internal · 7 accounts flagged',
-      aum: '—', contacts: '7', products: '12',
-      productTags: ['JEPI', 'JPM Core Bond', 'Income Builder', 'Equity SMA', 'MMF'],
-      scopes: [
-        { label: 'Include idle cash candidates', sub: '3 accounts >60d', on: true },
-        { label: 'Include NOT MET contacts',    sub: '5 contacts',      on: true },
-        { label: 'Include open opportunities',  sub: '8 open',          on: false },
+      scope: 'Showing all contacts across the 7 accounts flagged for today\'s prep. Brief will cover each person\'s relationship status, product exposure, and next-best action.',
+      contacts: [
+        { initials:'MC', name:'Margaret Chen',   role:'Portfolio Manager · Chase Wealth Manhattan', bg:'#dbeafe', fg:'#1d4ed8', badge:'JEPI review today',  badgeCls:'badge-focus',   on:true  },
+        { initials:'DO', name:'David Okonkwo',   role:'Senior Advisor · JPMC Wealth · Chicago',    bg:'#ccfbf1', fg:'#0f766e', badge:'Core Bond call today',badgeCls:'badge-focus',   on:true  },
+        { initials:'SW', name:'Sarah Whitfield', role:'Advisor · Chase Wealth Manhattan',           bg:'#e0f2fe', fg:'#075985', badge:'FOCUS',              badgeCls:'badge-focus',   on:false },
+        { initials:'HM', name:'Hannah Martinez', role:'Senior Advisor · Sentinel Wealth A22-North', bg:'#fef9c3', fg:'#854d0e', badge:'MET 62D AGO',        badgeCls:'badge-amber',   on:false },
+        { initials:'LP', name:'Lin Park',        role:'Portfolio Manager · WiseWealth A17-Green',   bg:'#f3e8ff', fg:'#7e22ce', badge:'NOT MET YTD',        badgeCls:'badge-notmet',  on:false },
+        { initials:'PS', name:'Priya Shah',      role:'Director · Cascade Private · A17-Green',    bg:'#fce7f3', fg:'#9d174d', badge:'MET 28D AGO',        badgeCls:'badge-amber',   on:false },
       ]
     },
     contact: {
-      scope: 'Select contacts across the 7 accounts to generate individual relationship briefs for each.',
+      scope: 'Showing the contacts most relevant to prep for today — those with active meetings or time-sensitive follow-ups on this calendar.',
       contacts: [
-        { initials:'MC', name:'Margaret Chen',   role:'Portfolio Manager · Chase Wealth Manhattan', bg:'#dbeafe', fg:'#1d4ed8', badge:'FOCUS',       badgeCls:'badge-focus',  on:true  },
-        { initials:'DO', name:'David Okonkwo',   role:'Senior Advisor · JPMC Wealth Chicago',      bg:'#ccfbf1', fg:'#0f766e', badge:'NOT MET YTD', badgeCls:'badge-notmet', on:true  },
-        { initials:'SW', name:'Sarah Whitfield', role:'Advisor · Chase Wealth Manhattan',           bg:'#e0f2fe', fg:'#075985', badge:'FOCUS',       badgeCls:'badge-focus',  on:false },
-        { initials:'LP', name:'Lin Park',        role:'Portfolio Manager · WiseWealth A17-Green',   bg:'#f3e8ff', fg:'#7e22ce', badge:'NOT MET YTD', badgeCls:'badge-notmet', on:false },
+        { initials:'MC', name:'Margaret Chen',   role:'Portfolio Manager · Chase Wealth Manhattan', bg:'#dbeafe', fg:'#1d4ed8', badge:'10:30 AM today',     badgeCls:'badge-focus',   on:true  },
+        { initials:'DO', name:'David Okonkwo',   role:'Senior Advisor · JPMC Wealth · Chicago',    bg:'#ccfbf1', fg:'#0f766e', badge:'3:30 PM today',      badgeCls:'badge-focus',   on:true  },
+        { initials:'HM', name:'Hannah Martinez', role:'Senior Advisor · Sentinel Wealth A22-North', bg:'#fef9c3', fg:'#854d0e', badge:'June 22 RSVP',       badgeCls:'badge-amber',   on:false },
       ]
     },
     meeting: {
-      scope: "Brief will generate an internal prep agenda with key talking points across all flagged accounts for today's session.",
-      title: 'Prep — JPMC Manhattan top accounts', time: 'Internal · 9:00 AM',
-      badges: [{ text:'Internal', cls:'badge-blue' }, { text:'7 Accounts', cls:'badge-green' }, { text:'No recording', cls:'badge-amber' }],
-      points: [
-        { text: 'Review JEPI inflow momentum — Chase Wealth Manhattan up $1.42M yesterday', on:true },
-        { text: 'Flag idle cash candidates: Sentinel A22-North ($420K >60d) and WiseWealth A17-Green', on:true },
-        { text: 'Note June 22 Fixed Income outlook RSVPs — 4 confirmed from territory', on:true },
-        { text: 'David Okonkwo — Mercer added JPM Core Bond; first meeting NOT YET scheduled', on:false },
-        { text: 'Ridgeway Group proposal still outstanding — 6d past deadline, follow up today', on:false },
+      scope: 'Showing only the attendees confirmed on this internal prep session invite.',
+      contacts: [
+        { initials:'JC', name:'James Chen',      role:'Internal Client Advisor · JPMC Asset Management', bg:'#fee2e2', fg:'#b91c1c', badge:'You', badgeCls:'badge-default', on:true },
       ]
     }
   },
+
+  // ── M2: M. Chen JEPI strategy review ──────────────────────────────────
   m2: {
     account: {
-      scope: 'Brief will cover the full Chase Wealth Manhattan firm profile — AUM, product holdings, trade history, and open opportunities across all contacts.',
-      firmName: 'Chase Wealth Manhattan', firmSub: 'JPMC Wealth · A11-East · FOCUS account',
-      aum: '$84.2M', contacts: '6', products: '4',
-      productTags: ['JPM Equity Income', 'JEPI', 'Income Builder', 'MMF'],
-      scopes: [
-        { label: 'Include all firm contacts',     sub: '6 contacts',  on: true  },
-        { label: 'Include recent trade activity', sub: 'Last 90 days', on: true  },
-        { label: 'Include open opportunities',    sub: '2 open',      on: false },
+      scope: 'Showing all 6 contacts on file at Chase Wealth Manhattan. Brief will cover each person\'s relationship to the account — including those not on this meeting.',
+      contacts: [
+        { initials:'MC', name:'Margaret Chen',   role:'Portfolio Manager · Chase Wealth Manhattan',  bg:'#dbeafe', fg:'#1d4ed8', badge:'Primary',       badgeCls:'badge-focus',   on:true  },
+        { initials:'JW', name:'Jane Wilson',      role:'Client Associate · Chase Wealth Manhattan',   bg:'#dcfce7', fg:'#166534', badge:'On meeting',    badgeCls:'badge-met',     on:true  },
+        { initials:'RB', name:'Robert Baxter',   role:'Director of Investments · Chase Wealth',      bg:'#fef9c3', fg:'#854d0e', badge:'Not on meeting', badgeCls:'badge-default', on:false },
+        { initials:'HL', name:'Helen Liu',       role:'Senior Analyst · Chase Wealth Manhattan',     bg:'#f3e8ff', fg:'#7e22ce', badge:'Not on meeting', badgeCls:'badge-default', on:false },
+        { initials:'DP', name:'David Park',      role:'Senior Advisor · Chase Wealth · Boston',      bg:'#e0f2fe', fg:'#075985', badge:'Boston branch',  badgeCls:'badge-default', on:false },
+        { initials:'SK', name:'Sarah Kim',       role:'Compliance Officer · Chase Wealth Manhattan', bg:'#fce7f3', fg:'#9d174d', badge:'Compliance',     badgeCls:'badge-default', on:false },
       ]
     },
     contact: {
-      scope: 'Select individual contacts at Chase Wealth Manhattan to generate a tailored relationship brief for each person.',
+      scope: 'Showing meeting attendees plus related contacts at Chase Wealth who have relevant context for this JEPI strategy conversation.',
       contacts: [
-        { initials:'MC', name:'Margaret Chen', role:'Portfolio Manager · Chase Wealth Manhattan', bg:'#dbeafe', fg:'#1d4ed8', badge:'Primary',      badgeCls:'badge-focus',   on:true  },
-        { initials:'JW', name:'Jane Wilson',   role:'Client Associate · Chase Wealth Manhattan',  bg:'#dcfce7', fg:'#166534', badge:'Meeting inv.', badgeCls:'badge-met',     on:true  },
-        { initials:'RB', name:'Robert Baxter', role:'Director of Investments · Chase Wealth',     bg:'#fef9c3', fg:'#854d0e', badge:'',             badgeCls:'badge-default', on:false },
-        { initials:'HL', name:'Helen Liu',     role:'Senior Analyst · Chase Wealth Manhattan',    bg:'#f3e8ff', fg:'#7e22ce', badge:'',             badgeCls:'badge-default', on:false },
+        { initials:'MC', name:'Margaret Chen',   role:'Portfolio Manager · Chase Wealth Manhattan',  bg:'#dbeafe', fg:'#1d4ed8', badge:'Primary',        badgeCls:'badge-focus',   on:true  },
+        { initials:'JW', name:'Jane Wilson',      role:'Client Associate · Chase Wealth Manhattan',   bg:'#dcfce7', fg:'#166534', badge:'Meeting inv.',   badgeCls:'badge-met',     on:true  },
+        { initials:'RB', name:'Robert Baxter',   role:'Director of Investments · Chase Wealth',      bg:'#fef9c3', fg:'#854d0e', badge:'Decision maker', badgeCls:'badge-amber',   on:false },
       ]
     },
     meeting: {
-      scope: "Brief will generate agenda and talking points tailored to each attendee's profile for the 10:30 AM JEPI strategy review.",
-      title: 'M. Chen — JEPI Strategy Review', time: 'Chase Wealth Manhattan · 10:30 AM',
-      badges: [{ text:'JEPI Strategy', cls:'badge-blue' }, { text:'FOCUS Account', cls:'badge-green' }, { text:'14d since last meeting', cls:'badge-amber' }],
-      points: [
-        { text: 'JEPI position now $38.4M — up 12% MoM. At 46% of firm AUM, approaching concentration threshold', on:true },
-        { text: 'Idle cash: $420K in MMF for 60+ days. Present Income Builder as a diversification option', on:true },
-        { text: 'Last discussion (May 28): Margaret flagged interest in options-overlay strategies', on:true },
-        { text: 'Jane Wilson joined 3 months ago — acknowledge her role, confirm communication preferences', on:false },
-        { text: 'Bring Q2 JEPI commentary PDF and updated distribution yield comparison vs. peers', on:false },
+      scope: 'Showing only the 3 people confirmed on this meeting invite.',
+      contacts: [
+        { initials:'MC', name:'Margaret Chen',   role:'Portfolio Manager · Chase Wealth Manhattan',        bg:'#dbeafe', fg:'#1d4ed8', badge:'External',   badgeCls:'badge-default', on:true  },
+        { initials:'JW', name:'Jane Wilson',      role:'Client Associate · Chase Wealth Manhattan',         bg:'#dcfce7', fg:'#166534', badge:'External',   badgeCls:'badge-default', on:true  },
+        { initials:'JC', name:'James Chen',      role:'Internal Client Advisor · JPMC Asset Management',   bg:'#fee2e2', fg:'#b91c1c', badge:'You',        badgeCls:'badge-default', on:false },
       ]
     }
   },
+
+  // ── M3: CWM Regional sync ──────────────────────────────────────────────
   m3: {
     account: {
-      scope: 'Brief will cover JPMorgan Chase Wealth Management as the internal account — Q2 pipeline metrics, regional performance, and upcoming territory changes.',
-      firmName: 'JPMorgan Chase Wealth Mgmt', firmSub: 'Internal · CWM East Region · Regional Sync',
-      aum: '$312M', contacts: '5', products: '—',
-      productTags: ['JEPI', 'Income Builder', 'Equity SMA', 'JPM Core Bond', 'MMF'],
-      scopes: [
-        { label: 'Include Q2 pipeline data',              sub: 'All advisors',   on: true  },
-        { label: 'Include event RSVP list',               sub: 'June 22 outlook', on: true  },
-        { label: 'Include territory rebalancing proposal', sub: 'Draft v2',       on: false },
+      scope: 'Showing all 8 members of the CWM East regional team. Brief will cover each person\'s territory performance and current pipeline — including those not on this sync.',
+      contacts: [
+        { initials:'JR', name:'Jessica Ramirez', role:'Regional Director · CWM East',              bg:'#f3e8ff', fg:'#7e22ce', badge:'Organizer',      badgeCls:'badge-focus',   on:true  },
+        { initials:'AK', name:'Alex Kim',        role:'Advisor · CWM East · A11-East territory',   bg:'#e0f2fe', fg:'#075985', badge:'On meeting',     badgeCls:'badge-met',     on:true  },
+        { initials:'TS', name:'Tom Sato',        role:'Advisor · CWM East · A14-East territory',   bg:'#dcfce7', fg:'#166534', badge:'On meeting',     badgeCls:'badge-met',     on:false },
+        { initials:'PR', name:'Priya Rao',       role:'Analyst · CWM East',                        bg:'#fef9c3', fg:'#854d0e', badge:'On meeting',     badgeCls:'badge-met',     on:false },
+        { initials:'CM', name:'Chris Malone',    role:'Advisor · CWM East · A17-Green territory',  bg:'#ccfbf1', fg:'#0f766e', badge:'Not on meeting', badgeCls:'badge-default', on:false },
+        { initials:'DW', name:'Dana Wells',      role:'Operations Manager · CWM East',              bg:'#fce7f3', fg:'#9d174d', badge:'Not on meeting', badgeCls:'badge-default', on:false },
+        { initials:'NF', name:'Nina Foster',     role:'Advisor · CWM East · A22-North territory',  bg:'#e0e7ff', fg:'#3730a3', badge:'Not on meeting', badgeCls:'badge-default', on:false },
+        { initials:'JC', name:'James Chen',      role:'Internal Client Advisor · JPMC Asset Mgmt', bg:'#fee2e2', fg:'#b91c1c', badge:'You',            badgeCls:'badge-default', on:false },
       ]
     },
     contact: {
-      scope: 'Generate individual prep notes for each internal attendee based on their territory performance and current priorities.',
+      scope: 'Showing the 5 meeting attendees plus one additional territory advisor whose accounts are on the agenda.',
       contacts: [
-        { initials:'JR', name:'Jessica Ramirez', role:'Regional Director · CWM East',  bg:'#f3e8ff', fg:'#7e22ce', badge:'Organizer', badgeCls:'badge-focus',   on:true  },
-        { initials:'AK', name:'Alex Kim',         role:'Advisor · CWM East Territory', bg:'#e0f2fe', fg:'#075985', badge:'',          badgeCls:'badge-default', on:true  },
-        { initials:'TS', name:'Tom Sato',          role:'Advisor · CWM East Territory', bg:'#dcfce7', fg:'#166534', badge:'',          badgeCls:'badge-default', on:false },
-        { initials:'PR', name:'Priya Rao',         role:'Analyst · CWM East Territory', bg:'#fef9c3', fg:'#854d0e', badge:'',          badgeCls:'badge-default', on:false },
+        { initials:'JR', name:'Jessica Ramirez', role:'Regional Director · CWM East',              bg:'#f3e8ff', fg:'#7e22ce', badge:'Organizer',      badgeCls:'badge-focus',   on:true  },
+        { initials:'AK', name:'Alex Kim',        role:'Advisor · CWM East · A11-East territory',   bg:'#e0f2fe', fg:'#075985', badge:'Meeting inv.',   badgeCls:'badge-met',     on:true  },
+        { initials:'TS', name:'Tom Sato',        role:'Advisor · CWM East · A14-East territory',   bg:'#dcfce7', fg:'#166534', badge:'Meeting inv.',   badgeCls:'badge-met',     on:false },
+        { initials:'PR', name:'Priya Rao',       role:'Analyst · CWM East',                        bg:'#fef9c3', fg:'#854d0e', badge:'Meeting inv.',   badgeCls:'badge-met',     on:false },
+        { initials:'CM', name:'Chris Malone',    role:'Advisor · CWM East · A17-Green territory',  bg:'#ccfbf1', fg:'#0f766e', badge:'On agenda',      badgeCls:'badge-amber',   on:false },
       ]
     },
     meeting: {
-      scope: 'Brief will generate a structured regional sync agenda with key data points, action items, and context for each agenda topic.',
-      title: 'CWM Regional Sync', time: 'JPMorgan CWM East · 12:00 PM',
-      badges: [{ text:'Internal Sync', cls:'badge-blue' }, { text:'Q2 Review', cls:'badge-green' }, { text:'5 Attendees', cls:'badge-amber' }],
-      points: [
-        { text: 'Q2 YTD gross sales at $312M — 64% to $487M goal. Highlight JEPI inflows as primary driver', on:true },
-        { text: 'June 22 Fixed Income Outlook: 4 confirmed RSVPs from territory. Share attendee list for follow-up assignments', on:true },
-        { text: 'Territory rebalancing — Cascade Private and WiseWealth A17-Green accounts under review', on:true },
-        { text: 'Alex Kim: Ridgeway Group proposal still outstanding — coordinate handoff if needed', on:false },
-        { text: 'Tom Sato: 3 accounts with idle cash >60d flagged for MMF candidacy outreach this week', on:false },
+      scope: 'Showing only the 5 people confirmed on this regional sync invite.',
+      contacts: [
+        { initials:'JR', name:'Jessica Ramirez', role:'Regional Director · CWM East',              bg:'#f3e8ff', fg:'#7e22ce', badge:'Organizer',  badgeCls:'badge-focus',   on:true  },
+        { initials:'AK', name:'Alex Kim',        role:'Advisor · CWM East · A11-East territory',   bg:'#e0f2fe', fg:'#075985', badge:'Internal',   badgeCls:'badge-default', on:true  },
+        { initials:'TS', name:'Tom Sato',        role:'Advisor · CWM East · A14-East territory',   bg:'#dcfce7', fg:'#166534', badge:'Internal',   badgeCls:'badge-default', on:false },
+        { initials:'PR', name:'Priya Rao',       role:'Analyst · CWM East',                        bg:'#fef9c3', fg:'#854d0e', badge:'Internal',   badgeCls:'badge-default', on:false },
+        { initials:'JC', name:'James Chen',      role:'Internal Client Advisor · JPMC Asset Mgmt', bg:'#fee2e2', fg:'#b91c1c', badge:'You',        badgeCls:'badge-default', on:false },
       ]
     }
   },
+
+  // ── M4: D. Okonkwo Core Bond ───────────────────────────────────────────
   m4: {
     account: {
-      scope: 'Brief will cover the full JPMC Wealth Chicago profile for David Okonkwo — AUM, Mercer window change, and JPM Core Bond positioning context.',
-      firmName: 'JPMC Wealth · Chicago', firmSub: 'A22-North · NOT MET YTD — First conversation',
-      aum: '$985K', contacts: '2', products: '1',
-      productTags: ['JEPI (via Mercer window)'],
-      scopes: [
-        { label: 'Include Mercer window update details', sub: 'Core Bond added', on: true  },
-        { label: 'Include past interaction history',     sub: 'Last met Apr 14', on: true  },
-        { label: 'Include competitive landscape',        sub: 'vs. Pimco/Vanguard', on: false },
+      scope: 'Showing all 4 contacts on file at JPMC Wealth Chicago. Brief will cover each person\'s relationship history — including those not on this call.',
+      contacts: [
+        { initials:'DO', name:'David Okonkwo',  role:'Senior Advisor · JPMC Wealth · Chicago',         bg:'#ccfbf1', fg:'#0f766e', badge:'Primary',        badgeCls:'badge-focus',   on:true  },
+        { initials:'RT', name:'Rachel Torres',  role:'Branch Manager · JPMC Wealth · Chicago',          bg:'#fef9c3', fg:'#854d0e', badge:'Not on meeting',  badgeCls:'badge-default', on:false },
+        { initials:'KP', name:'Kevin Park',     role:'Investment Analyst · JPMC Wealth · Chicago',      bg:'#e0f2fe', fg:'#075985', badge:'Not on meeting',  badgeCls:'badge-default', on:false },
+        { initials:'JC', name:'James Chen',     role:'Internal Client Advisor · JPMC Asset Management', bg:'#fee2e2', fg:'#b91c1c', badge:'You',             badgeCls:'badge-default', on:false },
       ]
     },
     contact: {
-      scope: 'Generate a contact-level relationship brief for David Okonkwo ahead of this first JPM Core Bond conversation.',
+      scope: 'Showing David Okonkwo plus the Chicago branch manager who influences platform decisions — both relevant context for this Core Bond conversation.',
       contacts: [
-        { initials:'DO', name:'David Okonkwo', role:'Senior Advisor · JPMC Wealth Chicago',       bg:'#ccfbf1', fg:'#0f766e', badge:'NOT MET YTD', badgeCls:'badge-notmet',  on:true  },
-        { initials:'JC', name:'James Chen',    role:'Internal Client Advisor · JPMC Asset Mgmt',  bg:'#fee2e2', fg:'#b91c1c', badge:'You',         badgeCls:'badge-default', on:false },
+        { initials:'DO', name:'David Okonkwo',  role:'Senior Advisor · JPMC Wealth · Chicago',          bg:'#ccfbf1', fg:'#0f766e', badge:'NOT MET YTD',    badgeCls:'badge-notmet',  on:true  },
+        { initials:'RT', name:'Rachel Torres',  role:'Branch Manager · JPMC Wealth · Chicago',           bg:'#fef9c3', fg:'#854d0e', badge:'Platform approver', badgeCls:'badge-amber', on:false },
       ]
     },
     meeting: {
-      scope: 'Brief will generate a first-meeting agenda for David Okonkwo focused on JPM Core Bond — Mercer context, positioning, and relationship-building talking points.',
-      title: 'D. Okonkwo — Core Bond Conversation', time: 'JPMC Wealth Chicago · 3:30 PM',
-      badges: [{ text:'First Meeting', cls:'badge-amber' }, { text:'Core Bond', cls:'badge-blue' }, { text:'NOT MET YTD', cls:'badge-amber' }],
-      points: [
-        { text: "Open with Mercer context: Mercer added JPM Core Bond as a high-conviction window — acknowledge the tailwind", on:true },
-        { text: "David's current AUM: $985K, primarily in JEPI via Mercer window. Core Bond adds fixed income ballast option", on:true },
-        { text: "Last contact: Apr 14 phone call — no follow-through from prior advisor. Acknowledge the gap and reset", on:true },
-        { text: "Ask about David's fixed income allocation thesis and any duration constraints in his current book", on:false },
-        { text: "Leave behind: JPM Core Bond Q2 commentary + Morningstar rating card", on:false },
+      scope: 'Showing only the 2 people confirmed on this call invite.',
+      contacts: [
+        { initials:'DO', name:'David Okonkwo',  role:'Senior Advisor · JPMC Wealth · Chicago',          bg:'#ccfbf1', fg:'#0f766e', badge:'External',       badgeCls:'badge-default', on:true  },
+        { initials:'JC', name:'James Chen',     role:'Internal Client Advisor · JPMC Asset Management',  bg:'#fee2e2', fg:'#b91c1c', badge:'You',            badgeCls:'badge-default', on:false },
       ]
     }
+  }
+};
+
+// ── Level card descriptions (update to reflect contact-first framing) ──
+const LEVEL_DESCS = {
+  account: {
+    m1: 'All contacts across the 7 flagged accounts',
+    m2: 'All 6 contacts at Chase Wealth Manhattan',
+    m3: 'All 8 members of the CWM East regional team',
+    m4: 'All 4 contacts at JPMC Wealth Chicago',
+  },
+  contact: {
+    m1: 'Contacts with active meetings on today\'s calendar',
+    m2: 'Meeting attendees + related contacts with context',
+    m3: 'Meeting attendees + territory advisor on agenda',
+    m4: 'David Okonkwo + Chicago branch manager',
+  },
+  meeting: {
+    m1: 'Just James Chen (solo internal prep)',
+    m2: '3 people on this invite',
+    m3: '5 people on this invite',
+    m4: '2 people on this invite',
   }
 };
 
@@ -965,6 +982,7 @@ function openModal(e, meetingId, title, sub) {
   activeLevel = 'contact';
   document.getElementById('modalTitle').textContent = title;
   document.getElementById('modalSub').textContent   = sub;
+  updateLevelDescs();
   ['account','contact','meeting'].forEach(l =>
     document.getElementById('lc-'+l).classList.toggle('active', l === activeLevel));
   renderBriefFor();
@@ -988,52 +1006,25 @@ function selectLevel(level) {
   renderBriefFor();
 }
 
-function updateScopeNote() {
-  document.getElementById('scopeText').textContent = MEETING_DATA[activeMeetingId][activeLevel].scope;
+function updateLevelDescs() {
+  document.getElementById('lc-account-desc').textContent = LEVEL_DESCS.account[activeMeetingId];
+  document.getElementById('lc-contact-desc').textContent = LEVEL_DESCS.contact[activeMeetingId];
+  document.getElementById('lc-meeting-desc').textContent = LEVEL_DESCS.meeting[activeMeetingId];
 }
 
+function updateScopeNote() {
+  document.getElementById('scopeText').textContent =
+    MEETING_DATA[activeMeetingId][activeLevel].scope;
+}
+
+// All three levels now render the same contact list UI — just different people
 function renderBriefFor() {
   const container = document.getElementById('briefForSection');
-  const d = MEETING_DATA[activeMeetingId];
-  if      (activeLevel === 'account')  renderAccountView(container, d.account);
-  else if (activeLevel === 'contact')  renderContactView(container, d.contact);
-  else                                  renderMeetingView(container, d.meeting);
-}
-
-function renderAccountView(container, data) {
-  const initials = data.firmName.split(' ').map(w=>w[0]).slice(0,2).join('');
-  container.innerHTML = `
-    <div class="sec-label">Run brief for</div>
-    <div class="account-brief-card">
-      <div class="abc-header">
-        <div class="abc-logo">${initials}</div>
-        <div><div class="abc-name">${data.firmName}</div><div class="abc-sub">${data.firmSub}</div></div>
-      </div>
-      <div class="abc-stats">
-        <div class="abc-stat"><div class="abc-stat-val">${data.aum}</div><div class="abc-stat-lbl">Firm AUM</div></div>
-        <div class="abc-stat"><div class="abc-stat-val">${data.contacts}</div><div class="abc-stat-lbl">Contacts</div></div>
-        <div class="abc-stat"><div class="abc-stat-val">${data.products}</div><div class="abc-stat-lbl">Products held</div></div>
-      </div>
-      <div class="abc-products">
-        <div class="abc-prod-label">Products on platform</div>
-        ${data.productTags.map(p=>`<span class="product-tag">${p}</span>`).join('')}
-      </div>
-      <div class="scope-toggles">
-        ${data.scopes.map(s=>`
-          <div class="scope-toggle ${s.on?'on':''}" onclick="toggleScopeItem(this)">
-            <div class="scope-toggle-check">${s.on?chk():''}</div>
-            <span class="scope-toggle-label">${s.label}</span>
-            <span class="scope-toggle-sub">${s.sub}</span>
-          </div>`).join('')}
-      </div>
-    </div>`;
-}
-
-function renderContactView(container, data) {
+  const data = MEETING_DATA[activeMeetingId][activeLevel];
   container.innerHTML = `
     <div class="sec-label">Run brief for</div>
     <div class="contact-list">
-      ${data.contacts.map(c=>`
+      ${data.contacts.map(c => `
         <div class="contact-row ${c.on?'on':''}" onclick="toggleContactRow(this)">
           <div class="contact-avatar" style="background:${c.bg};color:${c.fg};">${c.initials}</div>
           <div style="flex:1;min-width:0;">
@@ -1041,7 +1032,7 @@ function renderContactView(container, data) {
             <div class="contact-role">${c.role}</div>
           </div>
           ${c.badge ? `<div class="contact-badge ${c.badgeCls}">${c.badge}</div>` : ''}
-          <div class="contact-cb">${c.on?chk():''}</div>
+          <div class="contact-cb">${c.on ? chk() : ''}</div>
         </div>`).join('')}
     </div>
     <div class="search-wrap">
@@ -1050,50 +1041,13 @@ function renderContactView(container, data) {
     </div>`;
 }
 
-function renderMeetingView(container, data) {
-  container.innerHTML = `
-    <div class="sec-label">Run brief for</div>
-    <div class="meeting-brief-wrap">
-      <div class="meeting-brief-header">
-        <div class="mbh-icon">📋</div>
-        <div style="flex:1;">
-          <div class="mbh-title">${data.title}</div>
-          <div class="mbh-sub">${data.time}</div>
-          <div class="mbh-badges">${data.badges.map(b=>`<span class="mbh-badge ${b.cls}">${b.text}</span>`).join('')}</div>
-        </div>
-      </div>
-      <div class="talking-points">
-        <div class="tp-header">
-          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-          Select talking points to include
-        </div>
-        <div class="tp-list">
-          ${data.points.map(p=>`
-            <div class="tp-item ${p.on?'on':''}" onclick="toggleTpItem(this)">
-              <div class="tp-dot"></div>
-              <div class="tp-text">${p.text}</div>
-              <div class="tp-cb">${p.on?chk():''}</div>
-            </div>`).join('')}
-        </div>
-      </div>
-    </div>`;
-}
-
 function chk() {
   return `<svg width="9" height="9" fill="none" stroke="#fff" stroke-width="3" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>`;
 }
 
-function toggleScopeItem(el) {
-  el.classList.toggle('on');
-  el.querySelector('.scope-toggle-check').innerHTML = el.classList.contains('on') ? chk() : '';
-}
 function toggleContactRow(el) {
   el.classList.toggle('on');
   el.querySelector('.contact-cb').innerHTML = el.classList.contains('on') ? chk() : '';
-}
-function toggleTpItem(el) {
-  el.classList.toggle('on');
-  el.querySelector('.tp-cb').innerHTML = el.classList.contains('on') ? chk() : '';
 }
 
 function generate() {
@@ -1101,10 +1055,12 @@ function generate() {
   btn.classList.add('loading');
   btn.disabled = true;
   const levelLabel = { account:'Account', contact:'Contact', meeting:'Meeting' }[activeLevel];
-  const d = MEETING_DATA[activeMeetingId];
-  let who = activeLevel === 'account' ? d.account.firmName
-           : activeLevel === 'meeting' ? d.meeting.title
-           : (d.contact.contacts.filter(c=>c.on).map(c=>c.name).join(', ') || 'selected contacts');
+  const checked = document.querySelectorAll('#briefForSection .contact-row.on .contact-name');
+  const names = [...checked].map(n => n.textContent);
+  const who = names.length === 0 ? 'selected contacts'
+             : names.length === 1 ? names[0]
+             : names.length === 2 ? `${names[0]} and ${names[1]}`
+             : `${names[0]} and ${names.length - 1} others`;
   setTimeout(() => {
     document.getElementById('mainFlow').classList.add('gone');
     document.getElementById('successState').classList.add('open');
