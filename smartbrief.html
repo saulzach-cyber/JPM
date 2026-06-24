@@ -376,7 +376,7 @@ body {
 }
 .search-wrap input::placeholder { color: #cbd5e1; }
 
-/* ── Meeting view ── */
+/* ── Meeting level context view ── */
 .meeting-brief-wrap { display: flex; flex-direction: column; gap: 10px; }
 
 .meeting-brief-header {
@@ -397,39 +397,18 @@ body {
 .badge-green { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
 .badge-amber { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
 
-.talking-points {
+.context-items {
   background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;
 }
-.tp-header {
-  padding: 11px 16px; font-size: 10px; font-weight: 700;
-  letter-spacing: .06em; text-transform: uppercase; color: #94a3b8;
-  border-bottom: 1px solid #f1f5f9;
-  display: flex; align-items: center; gap: 6px;
+.ctx-item {
+  padding: 11px 16px; border-bottom: 1px solid #f1f5f9;
 }
-.tp-list { display: flex; flex-direction: column; }
-
-.tp-item {
-  display: flex; align-items: flex-start; gap: 10px;
-  padding: 10px 16px; border-bottom: 1px solid #f8fafc;
-  cursor: pointer; transition: background .12s;
+.ctx-item:last-child { border-bottom: none; }
+.ctx-label {
+  font-size: 10px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: #94a3b8; margin-bottom: 4px;
 }
-.tp-item:last-child { border-bottom: none; }
-.tp-item:hover { background: #f1f5f9; }
-.tp-item.on { background: #f0fdf4; }
-
-.tp-dot {
-  width: 6px; height: 6px; border-radius: 50%; background: #cbd5e1;
-  flex-shrink: 0; margin-top: 5px;
-}
-.tp-item.on .tp-dot { background: #22c55e; }
-.tp-text { font-size: 12px; color: #334155; line-height: 1.55; flex: 1; }
-
-.tp-cb {
-  width: 16px; height: 16px; border-radius: 4px;
-  border: 1.5px solid #cbd5e1; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center; transition: all .14s;
-}
-.tp-item.on .tp-cb { background: #22c55e; border-color: #22c55e; }
+.ctx-text { font-size: 12px; color: #334155; line-height: 1.6; }
 
 /* ── Modal footer ── */
 .modal-ft { padding: 0 20px 20px; display: flex; gap: 8px; justify-content: flex-end; }
@@ -944,13 +923,93 @@ const MEETING_DATA = {
   }
 };
 
-// ── Level card descriptions (update to reflect contact-first framing) ──
+// ── Account-level data (firm overview, no contact selection) ──
+const ACCOUNT_DATA = {
+  m1: {
+    firmInitials: 'JPM', firmName: 'JPMC Manhattan Top Accounts',
+    firmType: 'Internal Prep · Multi-account session',
+    stats: { aum: '$312M+', contacts: '14+', lastMeeting: 'Ongoing' },
+    products: ['JEPI', 'JPST', 'Income Builder', 'Muni SMA', 'Core Bond'],
+    scope: 'This brief will cover relationship health, product exposure, engagement gaps, and next-best actions across all 7 flagged accounts.',
+  },
+  m2: {
+    firmInitials: 'CWM', firmName: 'Chase Wealth Manhattan',
+    firmType: 'Registered Investment Advisor · A11-East',
+    stats: { aum: '$84M', contacts: '6', lastMeeting: 'May 28' },
+    products: ['JEPI', 'JPST', 'Income Builder'],
+    scope: 'This brief will cover the full account relationship — product holdings, trade history, engagement history, and recommended next actions for the firm.',
+  },
+  m3: {
+    firmInitials: 'CWM', firmName: 'JPMorgan Chase Wealth Management',
+    firmType: 'Internal Team · CWM East Region',
+    stats: { aum: '—', contacts: '8', lastMeeting: 'Weekly' },
+    products: ['JEPI', 'JEPQ', 'Muni SMA', 'JPM Core Bond'],
+    scope: 'This brief will cover regional pipeline status, territory performance vs. plan, and priorities for the CWM East team ahead of this sync.',
+  },
+  m4: {
+    firmInitials: 'JPW', firmName: 'JPMC Wealth · Chicago',
+    firmType: 'JPMC Wealth Management · A22-North',
+    stats: { aum: '$0.99M', contacts: '4', lastMeeting: 'Apr 14' },
+    products: [],
+    scope: 'This brief will cover account background, 62-day engagement gap context, and the JPM Core Bond Mercer window opportunity — to prepare for today\'s first YTD touchpoint.',
+  },
+};
+
+// ── Meeting-level context data (meeting context, no contact selection) ──
+const MEETING_CONTEXT_DATA = {
+  m1: {
+    title: 'Prep — JPMC Manhattan Top Accounts',
+    sub: 'Internal · 9:00 AM · Jun 16',
+    badges: [{ text: 'Internal', cls: 'badge-blue' }, { text: '7 accounts', cls: 'badge-amber' }],
+    contextItems: [
+      { label: 'Purpose', text: 'James Chen\'s daily prep routine before client-facing meetings — covering all accounts with activity on today\'s calendar.' },
+      { label: 'Key focus', text: 'JEPI inflow opportunities, idle cash candidates, and follow-up on June 22 Fixed Income event RSVPs.' },
+      { label: 'Prior context', text: 'Three of the flagged accounts had AUM threshold alerts triggered last week. Two others have not been contacted in 60+ days.' },
+      { label: 'Data sources', text: 'AUM alerts (Jun 14), CRM activity log, June 22 event RSVP tracker.' },
+    ]
+  },
+  m2: {
+    title: 'M. Chen — JEPI Strategy Review',
+    sub: 'Chase Wealth Manhattan · 10:30 AM · Jun 16',
+    badges: [{ text: 'JEPI', cls: 'badge-green' }, { text: 'Active ETF', cls: 'badge-blue' }, { text: '$84M AUM', cls: 'badge-amber' }],
+    contextItems: [
+      { label: 'Why this meeting', text: 'Margaret Chen requested a formal JEPI strategy review after increasing her allocation by $2.4M in Q1 2026. She has questions about covered call mechanics and downside protection.' },
+      { label: 'Last interaction', text: 'May 28, 2026 — Covered Q1 performance and discussed JEPQ as a potential complement. Margaret was receptive but wanted side-by-side data first.' },
+      { label: 'Key context', text: 'Robert Baxter (Director of Investments) approved the JEPI expansion but has not yet been introduced to Income Builder, which may be relevant to this conversation.' },
+      { label: 'Recent signals', text: 'Chase Wealth Manhattan ranked #3 in JEPI flows for A11-East last quarter. No redemptions on file.' },
+    ]
+  },
+  m3: {
+    title: 'CWM Regional Sync',
+    sub: 'JPMorgan Chase Wealth Management · 12:00 PM · Jun 16',
+    badges: [{ text: 'Internal', cls: 'badge-blue' }, { text: 'Q2 Pipeline', cls: 'badge-amber' }],
+    contextItems: [
+      { label: 'Purpose', text: 'Weekly regional sync led by Jessica Ramirez covering Q2 pipeline progress, upcoming events, and territory rebalancing across CWM East.' },
+      { label: 'Agenda highlights', text: 'Q2 pipeline review vs. plan, June 22 Fixed Income event RSVPs, territory rebalancing proposal for A17-Green.' },
+      { label: 'Prior sync', text: 'Jun 9 sync focused on JEPQ launch rollout and outreach prioritization. Territory A22-North flagged as behind pace.' },
+      { label: 'What to watch', text: 'Chris Malone (A17-Green) will not be on today\'s call but has 3 accounts on the agenda. Tom Sato has requested a territory boundary discussion.' },
+    ]
+  },
+  m4: {
+    title: 'D. Okonkwo — Core Bond Conversation',
+    sub: 'JPMC Wealth · Chicago · 3:30 PM · Jun 16',
+    badges: [{ text: 'Core Bond', cls: 'badge-green' }, { text: 'First meeting YTD', cls: 'badge-amber' }],
+    contextItems: [
+      { label: 'Why this meeting', text: 'Mercer Investments added JPM Core Bond as a high-conviction model window last month. David Okonkwo manages a significant sleeve of Mercer-aligned portfolios in Chicago.' },
+      { label: 'Relationship history', text: 'Last interaction: April 14, 2026 (62 days ago). David has invested in JEPI since 2024 but has not yet met James Chen in 2026 — this is the first YTD touchpoint.' },
+      { label: 'Key context', text: 'Rachel Torres (Branch Manager) approved the Core Bond outreach after the Mercer announcement. She may need to be looped in on any allocation decisions over $500K.' },
+      { label: 'Objective', text: 'Introduce JPM Core Bond, share the Mercer window intel, and explore whether an allocation fits David\'s current model sleeves.' },
+    ]
+  },
+};
+
+// ── Level card descriptions ──
 const LEVEL_DESCS = {
   account: {
-    m1: 'All contacts across the 7 flagged accounts',
-    m2: 'All 6 contacts at Chase Wealth Manhattan',
-    m3: 'All 8 members of the CWM East regional team',
-    m4: 'All 4 contacts at JPMC Wealth Chicago',
+    m1: 'Firm overview, products & relationship history',
+    m2: 'Firm overview, products & relationship history',
+    m3: 'Team overview, pipeline & territory performance',
+    m4: 'Firm overview, products & relationship history',
   },
   contact: {
     m1: 'Contacts with active meetings on today\'s calendar',
@@ -959,10 +1018,10 @@ const LEVEL_DESCS = {
     m4: 'David Okonkwo + Chicago branch manager',
   },
   meeting: {
-    m1: 'Just James Chen (solo internal prep)',
-    m2: '3 people on this invite',
-    m3: '5 people on this invite',
-    m4: '2 people on this invite',
+    m1: 'Meeting context, purpose & key intel',
+    m2: 'Meeting context, background & key intel',
+    m3: 'Meeting context, agenda & prior sync notes',
+    m4: 'Meeting context, background & key intel',
   }
 };
 
@@ -1017,9 +1076,61 @@ function updateScopeNote() {
     MEETING_DATA[activeMeetingId][activeLevel].scope;
 }
 
-// All three levels now render the same contact list UI — just different people
 function renderBriefFor() {
   const container = document.getElementById('briefForSection');
+  if (activeLevel === 'account') {
+    renderAccountView(container);
+  } else if (activeLevel === 'meeting') {
+    renderMeetingContextView(container);
+  } else {
+    renderContactView(container);
+  }
+}
+
+function renderAccountView(container) {
+  const d = ACCOUNT_DATA[activeMeetingId];
+  const prods = d.products.map(p => `<span class="product-tag">${p}</span>`).join('');
+  container.innerHTML = `
+    <div class="account-brief-card">
+      <div class="abc-header">
+        <div class="abc-logo">${d.firmInitials}</div>
+        <div>
+          <div class="abc-name">${d.firmName}</div>
+          <div class="abc-sub">${d.firmType}</div>
+        </div>
+      </div>
+      <div class="abc-stats">
+        <div class="abc-stat"><div class="abc-stat-val">${d.stats.aum}</div><div class="abc-stat-lbl">Total AUM</div></div>
+        <div class="abc-stat"><div class="abc-stat-val">${d.stats.contacts}</div><div class="abc-stat-lbl">Contacts</div></div>
+        <div class="abc-stat"><div class="abc-stat-val">${d.stats.lastMeeting}</div><div class="abc-stat-lbl">Last meeting</div></div>
+      </div>
+      ${d.products.length ? `<div class="abc-products"><div class="abc-prod-label">Current products</div>${prods}</div>` : ''}
+    </div>`;
+}
+
+function renderMeetingContextView(container) {
+  const d = MEETING_CONTEXT_DATA[activeMeetingId];
+  const badges = d.badges.map(b => `<span class="mbh-badge ${b.cls}">${b.text}</span>`).join('');
+  const items = d.contextItems.map(i => `
+    <div class="ctx-item">
+      <div class="ctx-label">${i.label}</div>
+      <div class="ctx-text">${i.text}</div>
+    </div>`).join('');
+  container.innerHTML = `
+    <div class="meeting-brief-wrap">
+      <div class="meeting-brief-header">
+        <div class="mbh-icon">📋</div>
+        <div style="flex:1;min-width:0;">
+          <div class="mbh-title">${d.title}</div>
+          <div class="mbh-sub">${d.sub}</div>
+          <div class="mbh-badges">${badges}</div>
+        </div>
+      </div>
+      <div class="context-items">${items}</div>
+    </div>`;
+}
+
+function renderContactView(container) {
   const data = MEETING_DATA[activeMeetingId][activeLevel];
   container.innerHTML = `
     <div class="sec-label">Run brief for</div>
@@ -1054,18 +1165,26 @@ function generate() {
   const btn = document.getElementById('genBtn');
   btn.classList.add('loading');
   btn.disabled = true;
-  const levelLabel = { account:'Account', contact:'Contact', meeting:'Meeting' }[activeLevel];
-  const checked = document.querySelectorAll('#briefForSection .contact-row.on .contact-name');
-  const names = [...checked].map(n => n.textContent);
-  const who = names.length === 0 ? 'selected contacts'
-             : names.length === 1 ? names[0]
-             : names.length === 2 ? `${names[0]} and ${names[1]}`
-             : `${names[0]} and ${names.length - 1} others`;
+  let successMsg;
+  if (activeLevel === 'account') {
+    const d = ACCOUNT_DATA[activeMeetingId];
+    successMsg = `Your <strong>Account-level</strong> SmartBrief for <strong>${d.firmName}</strong> is ready to open.`;
+  } else if (activeLevel === 'meeting') {
+    const d = MEETING_CONTEXT_DATA[activeMeetingId];
+    successMsg = `Your <strong>Meeting-level</strong> SmartBrief for <strong>${d.title}</strong> is ready to open.`;
+  } else {
+    const checked = document.querySelectorAll('#briefForSection .contact-row.on .contact-name');
+    const names = [...checked].map(n => n.textContent);
+    const who = names.length === 0 ? 'selected contacts'
+               : names.length === 1 ? names[0]
+               : names.length === 2 ? `${names[0]} and ${names[1]}`
+               : `${names[0]} and ${names.length - 1} others`;
+    successMsg = `Your <strong>Contact-level</strong> SmartBrief for <strong>${who}</strong> is ready to open.`;
+  }
   setTimeout(() => {
     document.getElementById('mainFlow').classList.add('gone');
     document.getElementById('successState').classList.add('open');
-    document.getElementById('successBody').innerHTML =
-      `Your <strong>${levelLabel}-level</strong> SmartBrief for <strong>${who}</strong> is ready to open.`;
+    document.getElementById('successBody').innerHTML = successMsg;
   }, 1800);
 }
 </script>

@@ -21,7 +21,7 @@ body {
 
 /* ── Proto bar ── */
 .proto-bar {
-  width: 100%; max-width: 620px;
+  width: 100%; max-width: 600px;
   display: flex; align-items: center; justify-content: space-between;
   padding-bottom: 10px; border-bottom: 1px solid #dde1e7;
 }
@@ -38,21 +38,23 @@ body {
 /* ── Card ── */
 .card {
   background: #fff; border: 1px solid #e2e8f0;
-  border-radius: 12px; width: 100%; max-width: 620px;
+  border-radius: 12px; width: 100%; max-width: 600px;
   box-shadow: 0 1px 4px rgba(0,0,0,.06); overflow: hidden;
 }
 
 .card-header {
   display: flex; align-items: flex-start; justify-content: space-between;
-  padding: 18px 20px 16px;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 18px 20px 0;
 }
+.card-header-left { display: flex; flex-direction: column; gap: 2px; }
 .card-title { font-size: 15px; font-weight: 700; color: #0f172a; }
 .card-sub   { font-size: 12px; color: #94a3b8; margin-top: 2px; }
 .result-count {
-  font-size: 11px; font-weight: 600;
-  background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;
-  border-radius: 20px; padding: 3px 10px; white-space: nowrap; flex-shrink: 0;
+  display: flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 500; color: #2563eb;
+  background: #f8fafc; border: 1px solid #e2e8f0;
+  border-radius: 6px; padding: 5px 11px; white-space: nowrap; flex-shrink: 0;
+  cursor: default;
 }
 
 /* ── Empty state (no filters yet) ── */
@@ -389,12 +391,16 @@ body {
 <div class="card">
 
   <div class="card-header">
-    <div>
+    <div class="card-header-left">
       <div class="card-title">Create a Call List</div>
-      <div class="card-sub">Build a prospecting list based on inclusion or exclusion criteria</div>
+      <div class="card-sub">Build a prospecting list by product, territory, and AUM</div>
     </div>
-    <div class="result-count" id="resultCount" style="display:none;">0 contacts</div>
+    <div class="result-count" id="resultCount" style="display:none;">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span id="resultCountText">0 contacts</span>
+    </div>
   </div>
+  <div style="height:1px;background:#f1f5f9;margin:16px 0 0;"></div>
 
   <!-- Empty prompt (no filters set yet) -->
   <div class="empty-prompt" id="emptyPrompt">
@@ -828,8 +834,8 @@ function renderResults() {
   const btn   = document.getElementById('createBtn');
 
   const toShow = ADVISORS.filter(a => visibleIds.has(a.id));
-  count.textContent = `${toShow.length} contact${toShow.length!==1?'s':''}`;
-  count.style.display = 'block';
+  document.getElementById('resultCountText').textContent = `${toShow.length} contact${toShow.length!==1?'s':''}`;
+  count.style.display = 'flex';
 
   if (!toShow.length && appliedFilters) {
     list.innerHTML = ''; none.classList.add('show');
