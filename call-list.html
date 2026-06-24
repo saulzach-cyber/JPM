@@ -42,71 +42,79 @@ body {
   box-shadow: 0 1px 4px rgba(0,0,0,.06); overflow: hidden;
 }
 
-/* Card header */
-.card-header { padding: 18px 20px 0; }
-.card-title-row {
+.card-header {
   display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 18px 20px 16px;
+  border-bottom: 1px solid #f1f5f9;
 }
-.card-title  { font-size: 15px; font-weight: 700; color: #0f172a; }
-.card-sub    { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+.card-title { font-size: 15px; font-weight: 700; color: #0f172a; }
+.card-sub   { font-size: 12px; color: #94a3b8; margin-top: 2px; }
 .result-count {
   font-size: 11px; font-weight: 600;
   background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;
-  border-radius: 20px; padding: 3px 10px; white-space: nowrap;
+  border-radius: 20px; padding: 3px 10px; white-space: nowrap; flex-shrink: 0;
 }
 
-/* ── Filter section ── */
-.filters { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; border-bottom: 1px solid #f1f5f9; }
-
-.filter-row { display: flex; flex-direction: column; gap: 6px; }
-.filter-label {
-  font-size: 10px; font-weight: 700; letter-spacing: .08em;
-  text-transform: uppercase; color: #94a3b8;
-  display: flex; align-items: center; gap: 6px;
+/* ── Empty state (no filters yet) ── */
+.empty-prompt {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 36px 24px; gap: 10px; text-align: center;
 }
+.ep-icon {
+  width: 52px; height: 52px; background: #eff6ff; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; font-size: 22px;
+  margin-bottom: 4px;
+}
+.ep-title { font-size: 14px; font-weight: 700; color: #0f172a; }
+.ep-sub   { font-size: 12px; color: #94a3b8; max-width: 280px; line-height: 1.6; }
 
-/* Toggle pills */
-.pill-row { display: flex; flex-wrap: wrap; gap: 6px; }
-.pill {
+.btn-set-filters {
+  margin-top: 6px;
+  display: flex; align-items: center; gap: 7px;
+  background: #2563eb; border: none; border-radius: 8px;
+  padding: 10px 22px; font-size: 13px; font-weight: 700; color: #fff;
+  cursor: pointer; transition: background .14s;
+}
+.btn-set-filters:hover { background: #1d4ed8; }
+
+/* ── Filter summary bar (shown after filters applied) ── */
+.filter-summary {
+  display: none;
+  padding: 14px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  flex-direction: column; gap: 8px;
+}
+.filter-summary.visible { display: flex; }
+
+.fs-expression {
+  font-size: 12px; color: #475569; line-height: 1.6;
+}
+.fs-expression strong { color: #0f172a; }
+
+.fs-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.fs-chips { display: flex; flex-wrap: wrap; gap: 5px; flex: 1; }
+
+.fs-chip {
+  display: flex; align-items: center; gap: 4px;
+  background: #f1f5f9; border: 1px solid #e2e8f0;
+  border-radius: 20px; padding: 3px 10px;
+  font-size: 11px; font-weight: 500; color: #475569;
+}
+.fs-chip.chip-blue   { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+.fs-chip.chip-red    { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+.fs-chip.chip-amber  { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+.fs-chip.chip-green  { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+
+.btn-edit-filters {
   display: flex; align-items: center; gap: 5px;
-  background: #f8fafc; border: 1.5px solid #e2e8f0;
-  border-radius: 20px; padding: 5px 12px;
-  font-size: 12px; font-weight: 500; color: #64748b;
-  cursor: pointer; transition: all .14s; user-select: none;
+  background: #f8fafc; border: 1px solid #e2e8f0;
+  border-radius: 7px; padding: 6px 12px;
+  font-size: 12px; font-weight: 600; color: #475569;
+  cursor: pointer; transition: all .14s; white-space: nowrap; flex-shrink: 0;
 }
-.pill:hover { border-color: #93c5fd; color: #1d4ed8; background: #f0f8ff; }
-.pill.active { background: #eff6ff; border-color: #2563eb; color: #1d4ed8; font-weight: 600; }
-.pill.active-red { background: #fef2f2; border-color: #fca5a5; color: #991b1b; font-weight: 600; }
+.btn-edit-filters:hover { background: #f1f5f9; color: #1d4ed8; border-color: #93c5fd; }
 
-/* Drill-down rows — hidden until parent selected */
-.drill-row {
-  display: none; flex-wrap: wrap; gap: 6px;
-  padding-left: 14px; border-left: 2px solid #e2e8f0;
-  margin-top: 2px;
-}
-.drill-row.visible { display: flex; }
-.drill-row .filter-label { margin-bottom: 2px; width: 100%; }
-
-/* Active filter chips */
-.active-chips {
-  display: none; flex-wrap: wrap; gap: 5px;
-  padding: 0 20px 14px;
-}
-.active-chips.has-chips { display: flex; }
-.chip {
-  display: flex; align-items: center; gap: 5px;
-  background: #eff6ff; border: 1px solid #bfdbfe;
-  border-radius: 20px; padding: 3px 4px 3px 10px;
-  font-size: 11px; font-weight: 500; color: #1d4ed8;
-}
-.chip-x {
-  width: 16px; height: 16px; border-radius: 50%; background: #bfdbfe;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: background .12s; flex-shrink: 0;
-}
-.chip-x:hover { background: #93c5fd; }
-
-/* ── Search bar ── */
+/* ── Search ── */
 .search-section { padding: 14px 20px; border-bottom: 1px solid #f1f5f9; }
 .search-wrap {
   display: flex; align-items: center; gap: 8px;
@@ -121,7 +129,6 @@ body {
 }
 .search-wrap input::placeholder { color: #cbd5e1; }
 
-/* Search dropdown */
 .search-dropdown {
   display: none; position: absolute;
   top: calc(100% + 4px); left: 0; right: 0;
@@ -148,59 +155,76 @@ body {
 .results { display: flex; flex-direction: column; }
 
 .result-row {
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 20px; border-bottom: 1px solid #f8fafc;
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 20px; border-bottom: 1px solid #f8fafc;
   transition: background .12s;
 }
 .result-row:last-child { border-bottom: none; }
 .result-row:hover { background: #fafbfc; }
-.result-row.manually-added { background: #f0fdf4; }
+.result-row.contacted { background: #f0fdf4; }
 
 .r-avatar {
-  width: 34px; height: 34px; border-radius: 50%;
+  width: 36px; height: 36px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 700; flex-shrink: 0;
+  font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 1px;
 }
-.r-info { flex: 1; min-width: 0; }
-.r-name { font-size: 13px; font-weight: 600; color: #0f172a; }
+
+.r-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+
+.r-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.r-name { font-size: 13px; font-weight: 700; color: #0f172a; }
 .r-firm { font-size: 11px; color: #64748b; margin-top: 1px; }
 
-.r-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px; }
-.r-badge {
-  font-size: 10px; font-weight: 600; border-radius: 4px; padding: 2px 7px;
+.r-phone {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; color: #475569;
 }
-.rb-notuse  { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
-.rb-partial { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
-.rb-terr    { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
-.rb-added   { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.r-phone svg { color: #94a3b8; flex-shrink: 0; }
 
-.r-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.r-aum { font-size: 12px; font-weight: 600; color: #334155; }
+.r-products { display: flex; flex-wrap: wrap; gap: 4px; }
+.r-prod-tag {
+  font-size: 10px; font-weight: 500;
+  background: #eff6ff; border: 1px solid #bfdbfe;
+  border-radius: 4px; padding: 2px 7px; color: #1d4ed8;
+}
+.r-prod-tag.not-invested {
+  background: #fef2f2; border-color: #fecaca; color: #991b1b;
+}
 
-.remove-btn {
-  width: 24px; height: 24px; border-radius: 6px;
+.r-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-top: 1px; }
+
+.btn-contact {
+  display: flex; align-items: center; gap: 5px;
+  background: #f8fafc; border: 1px solid #e2e8f0;
+  border-radius: 6px; padding: 5px 10px;
+  font-size: 11px; font-weight: 600; color: #475569;
+  cursor: pointer; transition: all .14s; white-space: nowrap;
+}
+.btn-contact:hover { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+.result-row.contacted .btn-contact {
+  background: #f0fdf4; border-color: #bbf7d0; color: #166534;
+  cursor: default;
+}
+
+.btn-remove {
+  width: 26px; height: 26px; border-radius: 6px;
   background: #f8fafc; border: 1px solid #e2e8f0;
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: #94a3b8; transition: all .14s;
+  cursor: pointer; color: #94a3b8; transition: all .14s; flex-shrink: 0;
 }
-.remove-btn:hover { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
+.btn-remove:hover { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
 
-/* Empty state */
-.empty-state {
-  display: none; flex-direction: column; align-items: center;
-  padding: 40px 24px; gap: 8px; text-align: center;
+/* No-results message */
+.no-results {
+  display: none; padding: 28px 24px; text-align: center;
+  font-size: 13px; color: #94a3b8;
 }
-.empty-state.show { display: flex; }
-.empty-icon { font-size: 32px; margin-bottom: 4px; }
-.empty-title { font-size: 14px; font-weight: 600; color: #475569; }
-.empty-sub   { font-size: 12px; color: #94a3b8; }
+.no-results.show { display: block; }
 
-/* ── Footer CTA ── */
+/* ── Card footer ── */
 .card-footer {
-  padding: 16px 20px;
-  border-top: 1px solid #f1f5f9;
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 12px;
+  padding: 14px 20px; border-top: 1px solid #f1f5f9;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
 .footer-note { font-size: 12px; color: #94a3b8; }
 .footer-note strong { color: #334155; }
@@ -214,6 +238,131 @@ body {
 .btn-create:hover { background: #1d4ed8; }
 .btn-create:disabled { background: #bfdbfe; cursor: not-allowed; }
 
+/* ════════════════════════════════
+   FILTER MODAL
+   ════════════════════════════════ */
+.overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(15,23,42,.45);
+  backdrop-filter: blur(3px);
+  z-index: 300; align-items: center; justify-content: center; padding: 20px;
+}
+.overlay.open { display: flex; }
+
+.filter-modal {
+  background: #fff; border: 1px solid #e2e8f0;
+  border-radius: 14px; width: 100%; max-width: 560px;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(15,23,42,.2);
+  animation: rise .18s ease;
+  display: flex; flex-direction: column;
+}
+@keyframes rise {
+  from { opacity:0; transform: translateY(12px) scale(.985); }
+  to   { opacity:1; transform: none; }
+}
+
+.fm-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 22px 24px 0; flex-shrink: 0;
+}
+.fm-title { font-size: 17px; font-weight: 700; color: #0f172a; }
+.fm-sub   { font-size: 12px; color: #94a3b8; margin-top: 3px; }
+.fm-close {
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 7px;
+  width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: #94a3b8; flex-shrink: 0; transition: all .14s;
+}
+.fm-close:hover { background: #f1f5f9; color: #475569; }
+
+.fm-divider { height: 1px; background: #f1f5f9; margin: 16px 0 0; flex-shrink: 0; }
+
+.fm-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
+
+/* Filter section */
+.fm-section { display: flex; flex-direction: column; gap: 10px; }
+.fm-section-label {
+  font-size: 10px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: #94a3b8;
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* Investment toggle */
+.invest-toggle {
+  display: grid; grid-template-columns: 1fr 1fr;
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 3px; gap: 3px;
+}
+.it-option {
+  padding: 7px 12px; border-radius: 6px;
+  font-size: 12px; font-weight: 600; color: #94a3b8;
+  cursor: pointer; text-align: center; transition: all .14s; user-select: none;
+}
+.it-option.active {
+  background: #fff; color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0,0,0,.1);
+}
+.it-option.active.red  { color: #991b1b; }
+.it-option.active.blue { color: #1d4ed8; }
+
+/* Pills */
+.pill-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.fm-pill {
+  display: flex; align-items: center; gap: 5px;
+  background: #f8fafc; border: 1.5px solid #e2e8f0;
+  border-radius: 20px; padding: 5px 13px;
+  font-size: 12px; font-weight: 500; color: #64748b;
+  cursor: pointer; transition: all .14s; user-select: none;
+}
+.fm-pill:hover { border-color: #93c5fd; color: #1d4ed8; background: #f0f8ff; }
+.fm-pill.active { background: #eff6ff; border-color: #2563eb; color: #1d4ed8; font-weight: 600; }
+.fm-pill.active-multi { background: #eff6ff; border-color: #2563eb; color: #1d4ed8; font-weight: 600; }
+
+/* AUM slider */
+.aum-options { display: flex; gap: 6px; flex-wrap: wrap; }
+.aum-opt {
+  background: #f8fafc; border: 1.5px solid #e2e8f0;
+  border-radius: 8px; padding: 6px 14px;
+  font-size: 12px; font-weight: 500; color: #64748b;
+  cursor: pointer; transition: all .14s; user-select: none;
+}
+.aum-opt:hover { border-color: #93c3fd; color: #1d4ed8; }
+.aum-opt.active { background: #eff6ff; border-color: #2563eb; color: #1d4ed8; font-weight: 600; }
+
+/* Expression preview */
+.expression-preview {
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
+  padding: 14px 16px; display: flex; flex-direction: column; gap: 4px;
+}
+.ep-label2 {
+  font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: #94a3b8; margin-bottom: 2px;
+}
+.ep-text {
+  font-size: 13px; color: #334155; line-height: 1.6; font-style: italic;
+}
+.ep-text em { font-style: normal; color: #2563eb; font-weight: 600; }
+
+/* Modal footer */
+.fm-footer {
+  padding: 16px 24px; border-top: 1px solid #f1f5f9;
+  display: flex; gap: 8px; justify-content: flex-end; flex-shrink: 0;
+}
+.btn-fm-cancel {
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+  padding: 9px 18px; font-size: 13px; font-weight: 500; color: #64748b;
+  cursor: pointer; transition: all .14s;
+}
+.btn-fm-cancel:hover { background: #f1f5f9; color: #334155; }
+.btn-fm-apply {
+  background: #2563eb; border: none; border-radius: 8px;
+  padding: 9px 22px; font-size: 13px; font-weight: 700; color: #fff;
+  cursor: pointer; transition: background .14s;
+  display: flex; align-items: center; gap: 7px;
+}
+.btn-fm-apply:hover { background: #1d4ed8; }
+.btn-fm-apply:disabled { background: #bfdbfe; cursor: not-allowed; }
+
 /* Toast */
 .toast {
   position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
@@ -221,7 +370,7 @@ body {
   border-radius: 10px; padding: 12px 20px;
   display: flex; align-items: center; gap: 8px;
   box-shadow: 0 8px 24px rgba(0,0,0,.2);
-  opacity: 0; transition: all .25s ease; pointer-events: none; white-space: nowrap;
+  opacity: 0; transition: all .25s ease; pointer-events: none; white-space: nowrap; z-index: 999;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
@@ -236,79 +385,43 @@ body {
   </a>
 </div>
 
+<!-- ══════════════ CARD ══════════════ -->
 <div class="card">
 
-  <!-- Header -->
   <div class="card-header">
-    <div class="card-title-row">
-      <div>
-        <div class="card-title">Create a Call List</div>
-        <div class="card-sub">Filter advisors by product usage, territory, and asset class</div>
-      </div>
-      <div class="result-count" id="resultCount">0 advisors</div>
+    <div>
+      <div class="card-title">Create a Call List</div>
+      <div class="card-sub">Build a prospecting list based on inclusion or exclusion criteria</div>
+    </div>
+    <div class="result-count" id="resultCount" style="display:none;">0 contacts</div>
+  </div>
+
+  <!-- Empty prompt (no filters set yet) -->
+  <div class="empty-prompt" id="emptyPrompt">
+    <div class="ep-icon">📋</div>
+    <div class="ep-title">No filters set</div>
+    <div class="ep-sub">Set your filters to generate a list of contacts to call — by product, territory, AUM, and more.</div>
+    <button class="btn-set-filters" onclick="openModal()">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="10" y2="18"/></svg>
+      Set Filters
+    </button>
+  </div>
+
+  <!-- Filter summary (shown after filters applied) -->
+  <div class="filter-summary" id="filterSummary">
+    <div class="fs-expression" id="fsExpression"></div>
+    <div class="fs-row">
+      <div class="fs-chips" id="fsChips"></div>
+      <button class="btn-edit-filters" onclick="openModal()">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit filters
+      </button>
     </div>
   </div>
 
-  <!-- Filters -->
-  <div class="filters">
-
-    <!-- Filter 1: Usage -->
-    <div class="filter-row">
-      <div class="filter-label">Product usage</div>
-      <div class="pill-row">
-        <div class="pill" data-filter="usage" data-val="doesnt" onclick="togglePill(this)">Does not use</div>
-        <div class="pill" data-filter="usage" data-val="uses"   onclick="togglePill(this)">Uses</div>
-        <div class="pill" data-filter="usage" data-val="any"    onclick="togglePill(this)">Any</div>
-      </div>
-    </div>
-
-    <!-- Filter 2: Asset class (drill-down) -->
-    <div class="drill-row" id="drill-assetclass">
-      <div class="filter-label">Asset class</div>
-      <div class="pill" data-filter="assetclass" data-val="etf"  onclick="togglePill(this)">ETFs</div>
-      <div class="pill" data-filter="assetclass" data-val="muni" onclick="togglePill(this)">Muni</div>
-      <div class="pill" data-filter="assetclass" data-val="sma"  onclick="togglePill(this)">SMA</div>
-      <div class="pill" data-filter="assetclass" data-val="fund" onclick="togglePill(this)">Mutual Fund</div>
-    </div>
-
-    <!-- Filter 3: Specific product (drill-down under ETF) -->
-    <div class="drill-row" id="drill-etfproduct">
-      <div class="filter-label">Specific ETF</div>
-      <div class="pill" data-filter="product" data-val="jepi"     onclick="togglePill(this)">JEPI</div>
-      <div class="pill" data-filter="product" data-val="jepq"     onclick="togglePill(this)">JEPQ</div>
-      <div class="pill" data-filter="product" data-val="jpst"     onclick="togglePill(this)">JPST</div>
-      <div class="pill" data-filter="product" data-val="jire"     onclick="togglePill(this)">JIRE</div>
-      <div class="pill" data-filter="product" data-val="any-etf"  onclick="togglePill(this)">Any JPM ETF</div>
-    </div>
-
-    <!-- Filter 4: Specific Muni product (drill-down under Muni) -->
-    <div class="drill-row" id="drill-muniproduct">
-      <div class="filter-label">Muni vehicle</div>
-      <div class="pill" data-filter="muniproduct" data-val="muni-etf"  onclick="togglePill(this)">Muni ETF</div>
-      <div class="pill" data-filter="muniproduct" data-val="muni-fund" onclick="togglePill(this)">Muni Fund</div>
-      <div class="pill" data-filter="muniproduct" data-val="muni-sma"  onclick="togglePill(this)">Muni SMA</div>
-    </div>
-
-    <!-- Filter 5: Territory -->
-    <div class="filter-row">
-      <div class="filter-label">Territory</div>
-      <div class="pill-row">
-        <div class="pill" data-filter="territory" data-val="A11-East"  onclick="togglePill(this)">A11-East</div>
-        <div class="pill" data-filter="territory" data-val="A14-East"  onclick="togglePill(this)">A14-East</div>
-        <div class="pill" data-filter="territory" data-val="A17-Green" onclick="togglePill(this)">A17-Green</div>
-        <div class="pill" data-filter="territory" data-val="A22-North" onclick="togglePill(this)">A22-North</div>
-        <div class="pill" data-filter="territory" data-val="A33-West"  onclick="togglePill(this)">A33-West</div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Active filter chips -->
-  <div class="active-chips" id="activeChips"></div>
-
-  <!-- Search bar -->
+  <!-- Search -->
   <div class="search-section">
-    <div class="search-wrap" id="searchWrap">
+    <div class="search-wrap">
       <svg width="14" height="14" fill="none" stroke="#cbd5e1" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input type="text" id="searchInput" placeholder="Search by name to add a contact manually…" oninput="handleSearch(this.value)" onblur="closeDropdown()" />
       <div class="search-dropdown" id="searchDropdown"></div>
@@ -317,15 +430,11 @@ body {
 
   <!-- Results -->
   <div class="results" id="resultsList"></div>
-  <div class="empty-state" id="emptyState">
-    <div class="empty-icon">🔍</div>
-    <div class="empty-title">No advisors match these filters</div>
-    <div class="empty-sub">Try adjusting your filters or search for a contact to add manually.</div>
-  </div>
+  <div class="no-results" id="noResults">No contacts match these filters. Try adjusting your criteria.</div>
 
   <!-- Footer -->
   <div class="card-footer">
-    <div class="footer-note" id="footerNote">Select filters to build your list</div>
+    <div class="footer-note" id="footerNote">Set filters to build your list</div>
     <button class="btn-create" id="createBtn" onclick="createList()" disabled>
       <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
       Create Call List
@@ -334,288 +443,484 @@ body {
 
 </div>
 
+
+<!-- ══════════════ FILTER MODAL ══════════════ -->
+<div class="overlay" id="overlay" onclick="handleOverlayClick(event)">
+<div class="filter-modal">
+
+  <div class="fm-header">
+    <div>
+      <div class="fm-title">Build your call list</div>
+      <div class="fm-sub">Select filters to define who should be on this list</div>
+    </div>
+    <button class="fm-close" onclick="closeModal()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <div class="fm-divider"></div>
+
+  <div class="fm-body">
+
+    <!-- Investment status + Product -->
+    <div class="fm-section">
+      <div class="fm-section-label">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        Invested in / Not invested in
+      </div>
+      <div class="invest-toggle">
+        <div class="it-option active red" id="it-not" onclick="setInvestToggle('not')">Not invested in</div>
+        <div class="it-option" id="it-in" onclick="setInvestToggle('in')">Invested in</div>
+      </div>
+      <div class="pill-grid" id="productPills">
+        <div class="fm-pill" data-group="product" data-val="JEPI"           onclick="toggleMultiPill(this)">JEPI</div>
+        <div class="fm-pill" data-group="product" data-val="JEPQ"           onclick="toggleMultiPill(this)">JEPQ</div>
+        <div class="fm-pill" data-group="product" data-val="JPST"           onclick="toggleMultiPill(this)">JPST</div>
+        <div class="fm-pill" data-group="product" data-val="JIRE"           onclick="toggleMultiPill(this)">JIRE</div>
+        <div class="fm-pill" data-group="product" data-val="JPM Core Bond"  onclick="toggleMultiPill(this)">JPM Core Bond</div>
+        <div class="fm-pill" data-group="product" data-val="Income Builder" onclick="toggleMultiPill(this)">Income Builder</div>
+        <div class="fm-pill" data-group="product" data-val="Equity SMA"     onclick="toggleMultiPill(this)">Equity SMA</div>
+        <div class="fm-pill" data-group="product" data-val="Muni SMA"       onclick="toggleMultiPill(this)">Muni SMA</div>
+        <div class="fm-pill" data-group="product" data-val="MMF"            onclick="toggleMultiPill(this)">MMF</div>
+      </div>
+    </div>
+
+    <!-- Asset Class -->
+    <div class="fm-section">
+      <div class="fm-section-label">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Asset class
+      </div>
+      <div class="pill-grid">
+        <div class="fm-pill" data-group="assetclass" data-val="ETF"         onclick="toggleMultiPill(this)">ETF</div>
+        <div class="fm-pill" data-group="assetclass" data-val="Muni"        onclick="toggleMultiPill(this)">Muni</div>
+        <div class="fm-pill" data-group="assetclass" data-val="SMA"         onclick="toggleMultiPill(this)">SMA</div>
+        <div class="fm-pill" data-group="assetclass" data-val="Mutual Fund" onclick="toggleMultiPill(this)">Mutual Fund</div>
+        <div class="fm-pill" data-group="assetclass" data-val="Fixed Income" onclick="toggleMultiPill(this)">Fixed Income</div>
+      </div>
+    </div>
+
+    <!-- Strategy -->
+    <div class="fm-section">
+      <div class="fm-section-label">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+        Strategy
+      </div>
+      <div class="pill-grid">
+        <div class="fm-pill" data-group="strategy" data-val="Active"        onclick="toggleMultiPill(this)">Active</div>
+        <div class="fm-pill" data-group="strategy" data-val="Passive"       onclick="toggleMultiPill(this)">Passive</div>
+        <div class="fm-pill" data-group="strategy" data-val="Income"        onclick="toggleMultiPill(this)">Income</div>
+        <div class="fm-pill" data-group="strategy" data-val="Growth"        onclick="toggleMultiPill(this)">Growth</div>
+        <div class="fm-pill" data-group="strategy" data-val="Alternatives"  onclick="toggleMultiPill(this)">Alternatives</div>
+      </div>
+    </div>
+
+    <!-- AUM Threshold -->
+    <div class="fm-section">
+      <div class="fm-section-label">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        AUM threshold (minimum)
+      </div>
+      <div class="aum-options">
+        <div class="aum-opt" data-val=""      onclick="setAUM(this)">Any</div>
+        <div class="aum-opt" data-val="$1M+"  onclick="setAUM(this)">$1M+</div>
+        <div class="aum-opt" data-val="$5M+"  onclick="setAUM(this)">$5M+</div>
+        <div class="aum-opt" data-val="$10M+" onclick="setAUM(this)">$10M+</div>
+        <div class="aum-opt" data-val="$25M+" onclick="setAUM(this)">$25M+</div>
+        <div class="aum-opt" data-val="$50M+" onclick="setAUM(this)">$50M+</div>
+      </div>
+    </div>
+
+    <!-- Territory -->
+    <div class="fm-section">
+      <div class="fm-section-label">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Territory
+      </div>
+      <div class="pill-grid">
+        <div class="fm-pill" data-group="territory" data-val="A11-East"  onclick="toggleMultiPill(this)">A11-East</div>
+        <div class="fm-pill" data-group="territory" data-val="A14-East"  onclick="toggleMultiPill(this)">A14-East</div>
+        <div class="fm-pill" data-group="territory" data-val="A17-Green" onclick="toggleMultiPill(this)">A17-Green</div>
+        <div class="fm-pill" data-group="territory" data-val="A22-North" onclick="toggleMultiPill(this)">A22-North</div>
+        <div class="fm-pill" data-group="territory" data-val="A33-West"  onclick="toggleMultiPill(this)">A33-West</div>
+      </div>
+    </div>
+
+    <!-- Focus list -->
+    <div class="fm-section">
+      <div class="fm-section-label">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Focus list
+      </div>
+      <div class="pill-grid">
+        <div class="fm-pill" data-group="focus" data-val="Focus 100"   onclick="toggleSinglePill(this, 'focus')">Focus 100</div>
+        <div class="fm-pill" data-group="focus" data-val="Not in Focus" onclick="toggleSinglePill(this, 'focus')">Not in Focus 100</div>
+      </div>
+    </div>
+
+    <!-- Expression preview -->
+    <div class="expression-preview">
+      <div class="ep-label2">Your query</div>
+      <div class="ep-text" id="expressionText">Select filters above to build your expression…</div>
+    </div>
+
+  </div><!-- /fm-body -->
+
+  <div class="fm-footer">
+    <button class="btn-fm-cancel" onclick="closeModal()">Cancel</button>
+    <button class="btn-fm-apply" id="applyBtn" onclick="applyFilters()">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      Apply Filters
+    </button>
+  </div>
+
+</div><!-- /filter-modal -->
+</div><!-- /overlay -->
+
 <div class="toast" id="toast">
   <svg width="14" height="14" fill="none" stroke="#4ade80" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
   <span id="toastText"></span>
 </div>
 
+
 <script>
 // ── Dataset ─────────────────────────────────────────────────────────────
 const ADVISORS = [
-  { id:1,  initials:'MC', name:'Margaret Chen',    firm:'Chase Wealth Manhattan',      territory:'A11-East',  aum:'$84.2M', bg:'#dbeafe', fg:'#1d4ed8',
-    products:['jepi','jpst'], assetClasses:['etf'], muniProducts:[] },
-  { id:2,  initials:'DO', name:'David Okonkwo',    firm:'JPMC Wealth · Chicago',       territory:'A22-North', aum:'$985K',  bg:'#ccfbf1', fg:'#0f766e',
-    products:['jepi'], assetClasses:['etf'], muniProducts:[] },
-  { id:3,  initials:'SW', name:'Sarah Whitfield',  firm:'Chase Wealth Manhattan',      territory:'A11-East',  aum:'$24.8M', bg:'#e0f2fe', fg:'#075985',
-    products:[], assetClasses:[], muniProducts:[] },
-  { id:4,  initials:'LP', name:'Lin Park',         firm:'WiseWealth · A17-Green',      territory:'A17-Green', aum:'$31.1M', bg:'#f3e8ff', fg:'#7e22ce',
-    products:[], assetClasses:[], muniProducts:[] },
-  { id:5,  initials:'RB', name:'Robert Baxter',    firm:'Chase Wealth · Boston',       territory:'A14-East',  aum:'$47.6M', bg:'#fef9c3', fg:'#854d0e',
-    products:['muni-fund'], assetClasses:['muni','fund'], muniProducts:['muni-fund'] },
-  { id:6,  initials:'HL', name:'Helen Liu',        firm:'Chase Wealth Manhattan',      territory:'A11-East',  aum:'$18.3M', bg:'#fce7f3', fg:'#9d174d',
-    products:['jepq'], assetClasses:['etf'], muniProducts:[] },
-  { id:7,  initials:'TN', name:'Tom Nguyen',       firm:'Ridgeway Group · A33-West',   territory:'A33-West',  aum:'$62.4M', bg:'#dcfce7', fg:'#166534',
-    products:['muni-etf','jepi'], assetClasses:['etf','muni'], muniProducts:['muni-etf'] },
-  { id:8,  initials:'PS', name:'Priya Shah',       firm:'Cascade Private · A17-Green', territory:'A17-Green', aum:'$89.0M', bg:'#fef3c7', fg:'#92400e',
-    products:[], assetClasses:[], muniProducts:[] },
-  { id:9,  initials:'JF', name:'James Farrow',     firm:'Sentinel Wealth · A22-North', territory:'A22-North', aum:'$41.5M', bg:'#e0e7ff', fg:'#3730a3',
-    products:['jire'], assetClasses:['etf'], muniProducts:[] },
-  { id:10, initials:'AM', name:'Angela Morris',    firm:'Pillar Financial · Boston',   territory:'A14-East',  aum:'$27.9M', bg:'#fce7f3', fg:'#9d174d',
-    products:['muni-sma'], assetClasses:['muni','sma'], muniProducts:['muni-sma'] },
-  { id:11, initials:'CK', name:'Chris Kwan',       firm:'Lattice Capital · NYC',       territory:'A11-East',  aum:'$55.3M', bg:'#ccfbf1', fg:'#0f766e',
-    products:[], assetClasses:[], muniProducts:[] },
-  { id:12, initials:'NP', name:'Natalie Patel',    firm:'WiseWealth · A33-West',       territory:'A33-West',  aum:'$33.7M', bg:'#fef9c3', fg:'#854d0e',
-    products:['jpst'], assetClasses:['etf'], muniProducts:[] },
+  { id:1,  initials:'MC', name:'Margaret Chen',   firm:'Chase Wealth Manhattan',      territory:'A11-East',  aum:84.2,  phone:'(212) 555-0182',
+    products:['JEPI','JPST','Income Builder'], assetClasses:['ETF','Fixed Income'], strategies:['Income','Active'], inFocus:true },
+  { id:2,  initials:'DO', name:'David Okonkwo',   firm:'JPMC Wealth · Chicago',       territory:'A22-North', aum:0.985, phone:'(312) 555-0294',
+    products:['JEPI'], assetClasses:['ETF'], strategies:['Income'], inFocus:false },
+  { id:3,  initials:'SW', name:'Sarah Whitfield', firm:'Chase Wealth Manhattan',      territory:'A11-East',  aum:24.8,  phone:'(212) 555-0371',
+    products:[], assetClasses:[], strategies:[], inFocus:true },
+  { id:4,  initials:'LP', name:'Lin Park',        firm:'WiseWealth · A17-Green',      territory:'A17-Green', aum:31.1,  phone:'(415) 555-0448',
+    products:[], assetClasses:[], strategies:[], inFocus:false },
+  { id:5,  initials:'RB', name:'Robert Baxter',   firm:'Chase Wealth · Boston',       territory:'A14-East',  aum:47.6,  phone:'(617) 555-0519',
+    products:['Muni SMA','Income Builder'], assetClasses:['Muni','SMA'], strategies:['Income','Active'], inFocus:true },
+  { id:6,  initials:'HL', name:'Helen Liu',       firm:'Chase Wealth Manhattan',      territory:'A11-East',  aum:18.3,  phone:'(212) 555-0663',
+    products:['JEPQ'], assetClasses:['ETF'], strategies:['Income'], inFocus:false },
+  { id:7,  initials:'TN', name:'Tom Nguyen',      firm:'Ridgeway Group · A33-West',   territory:'A33-West',  aum:62.4,  phone:'(310) 555-0774',
+    products:['JEPI','Muni SMA'], assetClasses:['ETF','Muni','SMA'], strategies:['Income','Active'], inFocus:true },
+  { id:8,  initials:'PS', name:'Priya Shah',      firm:'Cascade Private · A17-Green', territory:'A17-Green', aum:89.0,  phone:'(415) 555-0851',
+    products:[], assetClasses:[], strategies:[], inFocus:true },
+  { id:9,  initials:'JF', name:'James Farrow',    firm:'Sentinel Wealth · A22-North', territory:'A22-North', aum:41.5,  phone:'(312) 555-0922',
+    products:['JIRE','Equity SMA'], assetClasses:['ETF','SMA'], strategies:['Growth','Active'], inFocus:false },
+  { id:10, initials:'AM', name:'Angela Morris',   firm:'Pillar Financial · Boston',   territory:'A14-East',  aum:27.9,  phone:'(617) 555-1035',
+    products:['Muni SMA','JPM Core Bond'], assetClasses:['Muni','SMA','Fixed Income'], strategies:['Income','Active'], inFocus:true },
+  { id:11, initials:'CK', name:'Chris Kwan',      firm:'Lattice Capital · NYC',       territory:'A11-East',  aum:55.3,  phone:'(212) 555-1148',
+    products:['JPM Core Bond'], assetClasses:['Fixed Income'], strategies:['Income'], inFocus:false },
+  { id:12, initials:'NP', name:'Natalie Patel',   firm:'WiseWealth · A33-West',       territory:'A33-West',  aum:33.7,  phone:'(310) 555-1261',
+    products:['JPST'], assetClasses:['ETF'], strategies:['Passive'], inFocus:true },
 ];
 
-// ── State ────────────────────────────────────────────────────────────────
-const activeFilters = { usage:null, assetclass:null, product:null, muniproduct:null, territory:null };
-const manuallyAdded = new Set(); // ids added via search
+// Colors by initials
+const COLORS = {
+  MC:'#dbeafe,#1d4ed8', DO:'#ccfbf1,#0f766e', SW:'#e0f2fe,#075985', LP:'#f3e8ff,#7e22ce',
+  RB:'#fef9c3,#854d0e', HL:'#fce7f3,#9d174d', TN:'#dcfce7,#166534', PS:'#fef3c7,#92400e',
+  JF:'#e0e7ff,#3730a3', AM:'#fce7f3,#9d174d', CK:'#ccfbf1,#0f766e', NP:'#fef9c3,#854d0e',
+};
+function avatarColors(initials) {
+  const [bg, fg] = (COLORS[initials] || '#f1f5f9,#475569').split(',');
+  return { bg, fg };
+}
+
+// ── Filter state ─────────────────────────────────────────────────────────
+let filterState = {
+  investMode: 'not',   // 'not' | 'in'
+  products:   [],      // multi-select
+  assetClasses:[],
+  strategies: [],
+  aum:        '',
+  territories:[],
+  focus:      null,    // 'Focus 100' | 'Not in Focus' | null
+};
+let appliedFilters = null;
+const manuallyAdded = new Set();
+const contacted = new Set();
 let visibleIds = new Set();
 
-// ── Pill toggle ──────────────────────────────────────────────────────────
-function togglePill(pill) {
-  const filter = pill.dataset.filter;
-  const val    = pill.dataset.val;
+// ── Modal ────────────────────────────────────────────────────────────────
+function openModal() {
+  // Restore UI to match current filterState
+  restoreModalUI();
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal() { document.getElementById('overlay').classList.remove('open'); }
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('overlay')) closeModal();
+}
 
-  // Deselect siblings in same filter group
-  document.querySelectorAll(`.pill[data-filter="${filter}"]`).forEach(p => {
-    p.classList.remove('active','active-red');
+function restoreModalUI() {
+  // Investment toggle
+  setInvestToggle(filterState.investMode, true);
+  // Pills
+  document.querySelectorAll('.fm-pill').forEach(p => {
+    const group = p.dataset.group;
+    const val   = p.dataset.val;
+    const isOn  = group === 'focus'
+      ? filterState.focus === val
+      : (filterState[group === 'assetclass' ? 'assetClasses'
+          : group === 'territory' ? 'territories' : group+'s'] || filterState[group] || []).includes(val);
+    p.classList.toggle('active-multi', isOn);
+    p.classList.toggle('active', isOn);
   });
-
-  if (activeFilters[filter] === val) {
-    // Clicking active pill deselects it
-    activeFilters[filter] = null;
-  } else {
-    activeFilters[filter] = val;
-    pill.classList.add(filter === 'usage' && val === 'doesnt' ? 'active-red' : 'active');
-  }
-
-  // Cascade drill-downs
-  const showAssetClass = activeFilters.usage !== null && activeFilters.usage !== 'any';
-  const showEtfProduct = showAssetClass && activeFilters.assetclass === 'etf';
-  const showMuniProduct= showAssetClass && activeFilters.assetclass === 'muni';
-
-  document.getElementById('drill-assetclass').classList.toggle('visible', showAssetClass);
-  document.getElementById('drill-etfproduct').classList.toggle('visible', showEtfProduct);
-  document.getElementById('drill-muniproduct').classList.toggle('visible', showMuniProduct);
-
-  // Clear child filters if parent changed
-  if (!showEtfProduct) {
-    activeFilters.product = null;
-    document.querySelectorAll('[data-filter="product"]').forEach(p => p.classList.remove('active','active-red'));
-  }
-  if (!showMuniProduct) {
-    activeFilters.muniproduct = null;
-    document.querySelectorAll('[data-filter="muniproduct"]').forEach(p => p.classList.remove('active','active-red'));
-  }
-  if (!showAssetClass) {
-    activeFilters.assetclass = null;
-    document.querySelectorAll('[data-filter="assetclass"]').forEach(p => p.classList.remove('active','active-red'));
-  }
-
-  applyFilters();
-  renderChips();
+  // AUM
+  document.querySelectorAll('.aum-opt').forEach(o => {
+    o.classList.toggle('active', o.dataset.val === filterState.aum);
+  });
+  updateExpression();
 }
 
-// ── Filter logic ─────────────────────────────────────────────────────────
-function matchesFilters(adv) {
-  const { usage, assetclass, product, muniproduct, territory } = activeFilters;
-
-  // Territory
-  if (territory && adv.territory !== territory) return false;
-
-  // No usage filter = skip product check
-  if (!usage || usage === 'any') return true;
-
-  // Determine what the advisor has
-  const hasProduct = (p) => adv.products.includes(p);
-  const hasClass   = (c) => adv.assetClasses.includes(c);
-
-  let productMatch = false;
-
-  if (assetclass === 'etf') {
-    if (product && product !== 'any-etf') {
-      productMatch = hasProduct(product);
-    } else {
-      productMatch = adv.assetClasses.includes('etf');
-    }
-  } else if (assetclass === 'muni') {
-    if (muniproduct) {
-      productMatch = adv.muniProducts.includes(muniproduct);
-    } else {
-      productMatch = adv.assetClasses.includes('muni');
-    }
-  } else if (assetclass === 'sma') {
-    productMatch = adv.assetClasses.includes('sma');
-  } else if (assetclass === 'fund') {
-    productMatch = adv.assetClasses.includes('fund');
-  } else {
-    // No asset class selected — match any product usage
-    productMatch = adv.products.length > 0;
-  }
-
-  return usage === 'uses' ? productMatch : !productMatch;
+// ── Invest toggle ────────────────────────────────────────────────────────
+function setInvestToggle(mode, silent) {
+  filterState.investMode = mode;
+  const notEl = document.getElementById('it-not');
+  const inEl  = document.getElementById('it-in');
+  notEl.classList.toggle('active', mode === 'not');
+  notEl.classList.toggle('red',    mode === 'not');
+  inEl.classList.toggle('active',  mode === 'in');
+  inEl.classList.toggle('blue',    mode === 'in');
+  if (!silent) updateExpression();
 }
 
+// ── Multi-select pills ───────────────────────────────────────────────────
+function toggleMultiPill(pill) {
+  pill.classList.toggle('active');
+  pill.classList.toggle('active-multi', pill.classList.contains('active'));
+  const group = pill.dataset.group;
+  const val   = pill.dataset.val;
+  const key   = group === 'assetclass' ? 'assetClasses'
+              : group === 'territory'  ? 'territories'
+              : group + 's';
+  const arr = filterState[key] || filterState[group];
+  if (arr !== undefined) {
+    if (pill.classList.contains('active')) { if (!arr.includes(val)) arr.push(val); }
+    else { const i = arr.indexOf(val); if (i > -1) arr.splice(i, 1); }
+  }
+  updateExpression();
+}
+
+function toggleSinglePill(pill, group) {
+  const val = pill.dataset.val;
+  const wasActive = pill.classList.contains('active');
+  document.querySelectorAll(`.fm-pill[data-group="${group}"]`).forEach(p => {
+    p.classList.remove('active','active-multi');
+  });
+  if (!wasActive) {
+    pill.classList.add('active','active-multi');
+    filterState.focus = val;
+  } else {
+    filterState.focus = null;
+  }
+  updateExpression();
+}
+
+// ── AUM ──────────────────────────────────────────────────────────────────
+function setAUM(el) {
+  document.querySelectorAll('.aum-opt').forEach(o => o.classList.remove('active'));
+  el.classList.add('active');
+  filterState.aum = el.dataset.val;
+  updateExpression();
+}
+
+// ── Expression preview ───────────────────────────────────────────────────
+function updateExpression() {
+  const { investMode, products, assetClasses, strategies, aum, territories, focus } = filterState;
+  const parts = [];
+
+  // Base clause
+  if (territories.length) parts.push(`In <em>${territories.join(', ')}</em>`);
+  else parts.push('In <em>my territory</em>');
+
+  if (focus) parts.push(`from my <em>${focus}</em>`);
+
+  // Investment
+  if (products.length) {
+    const verb = investMode === 'not' ? 'who isn\'t using' : 'who is using';
+    parts.push(`${verb} <em>${products.join(', ')}</em>`);
+  } else if (assetClasses.length) {
+    const verb = investMode === 'not' ? 'not invested in' : 'invested in';
+    parts.push(`${verb} <em>${assetClasses.join(', ')}</em>`);
+  }
+
+  if (strategies.length) parts.push(`with a <em>${strategies.join('/')}</em> strategy`);
+  if (aum) parts.push(`with AUM <em>&gt; ${aum.replace('+','')}</em>`);
+
+  const text = parts.length > 1
+    ? parts.join(', ').replace(/,([^,]*)$/, ' and$1')
+    : parts[0] || 'Select filters above to build your expression…';
+
+  document.getElementById('expressionText').innerHTML = text;
+  document.getElementById('applyBtn').disabled = !hasAnyFilter();
+}
+
+function hasAnyFilter() {
+  const { products, assetClasses, strategies, aum, territories, focus } = filterState;
+  return products.length || assetClasses.length || strategies.length || aum || territories.length || focus;
+}
+
+// ── Apply filters ────────────────────────────────────────────────────────
 function applyFilters() {
-  const hasAnyFilter = Object.values(activeFilters).some(v => v !== null);
+  appliedFilters = JSON.parse(JSON.stringify(filterState));
+  closeModal();
+  document.getElementById('emptyPrompt').style.display = 'none';
+  renderSummary();
+  runFilters();
+}
+
+function renderSummary() {
+  const { investMode, products, assetClasses, strategies, aum, territories, focus } = appliedFilters;
+  const expr = document.getElementById('expressionText').innerHTML;
+  document.getElementById('fsExpression').innerHTML = expr.replace(/<em>/g,'<strong>').replace(/<\/em>/g,'</strong>');
+
+  const chips = [];
+  territories.forEach(t => chips.push({ label: t, cls: 'chip-blue' }));
+  if (focus) chips.push({ label: focus, cls: 'chip-amber' });
+  products.forEach(p => chips.push({ label: `${investMode==='not'?'Not ':''}${p}`, cls: investMode==='not'?'chip-red':'chip-green' }));
+  assetClasses.forEach(a => chips.push({ label: a, cls: 'chip-blue' }));
+  strategies.forEach(s => chips.push({ label: s, cls: '' }));
+  if (aum) chips.push({ label: `AUM > ${aum.replace('+','')}`, cls: '' });
+
+  document.getElementById('fsChips').innerHTML = chips.map(c =>
+    `<span class="fs-chip ${c.cls}">${c.label}</span>`).join('');
+  document.getElementById('filterSummary').classList.add('visible');
+}
+
+function runFilters() {
   visibleIds = new Set();
-
   ADVISORS.forEach(adv => {
-    if (matchesFilters(adv)) visibleIds.add(adv.id);
+    if (matchAdvisor(adv)) visibleIds.add(adv.id);
   });
-
-  // Keep manually added regardless
   manuallyAdded.forEach(id => visibleIds.add(id));
+  renderResults();
+}
 
-  renderResults(hasAnyFilter);
+function matchAdvisor(adv) {
+  const { investMode, products, assetClasses, strategies, aum, territories, focus } = appliedFilters;
+
+  if (territories.length && !territories.includes(adv.territory)) return false;
+  if (focus === 'Focus 100' && !adv.inFocus) return false;
+  if (focus === 'Not in Focus' && adv.inFocus) return false;
+  if (aum) {
+    const min = parseFloat(aum.replace(/[^0-9.]/g,''));
+    if (adv.aum < min) return false;
+  }
+  if (strategies.length && !strategies.some(s => adv.strategies.includes(s))) return false;
+
+  // Product / asset class matching
+  const targetProducts = products;
+  const targetClasses  = assetClasses;
+
+  if (!targetProducts.length && !targetClasses.length) return true;
+
+  let hasMatch = false;
+  if (targetProducts.length) hasMatch = targetProducts.some(p => adv.products.includes(p));
+  else if (targetClasses.length) hasMatch = targetClasses.some(c => adv.assetClasses.includes(c));
+
+  return investMode === 'not' ? !hasMatch : hasMatch;
 }
 
 // ── Render results ───────────────────────────────────────────────────────
-function renderResults(filtersActive) {
+function renderResults() {
   const list  = document.getElementById('resultsList');
-  const empty = document.getElementById('emptyState');
+  const none  = document.getElementById('noResults');
   const count = document.getElementById('resultCount');
   const footer= document.getElementById('footerNote');
   const btn   = document.getElementById('createBtn');
 
-  const toShow = filtersActive
-    ? ADVISORS.filter(a => visibleIds.has(a.id))
-    : ADVISORS.filter(a => manuallyAdded.has(a.id));
+  const toShow = ADVISORS.filter(a => visibleIds.has(a.id));
+  count.textContent = `${toShow.length} contact${toShow.length!==1?'s':''}`;
+  count.style.display = 'block';
 
-  count.textContent = `${toShow.length} advisor${toShow.length !== 1 ? 's' : ''}`;
-
-  if (toShow.length === 0 && filtersActive) {
-    list.innerHTML = '';
-    empty.classList.add('show');
+  if (!toShow.length && appliedFilters) {
+    list.innerHTML = ''; none.classList.add('show');
   } else {
-    empty.classList.remove('show');
-    list.innerHTML = toShow.map(adv => buildRow(adv)).join('');
+    none.classList.remove('show');
+    list.innerHTML = toShow.map(buildRow).join('');
   }
 
   btn.disabled = toShow.length === 0;
   footer.innerHTML = toShow.length > 0
-    ? `<strong>${toShow.length} advisor${toShow.length!==1?'s':''}</strong> ready to add to your call list`
-    : 'Select filters to build your list';
+    ? `<strong>${toShow.length} contact${toShow.length!==1?'s':''}</strong> ready to add to your call list`
+    : 'Set filters to build your list';
 }
 
 function buildRow(adv) {
-  const isManual = manuallyAdded.has(adv.id);
-  const { usage, assetclass, product, muniproduct } = activeFilters;
+  const { bg, fg } = avatarColors(adv.initials);
+  const isContacted = contacted.has(adv.id);
+  const isManual    = manuallyAdded.has(adv.id);
+  const { investMode, products } = appliedFilters || {};
 
-  let badges = '';
-
-  // Usage badge
-  if (usage === 'doesnt') {
-    badges += `<span class="r-badge rb-notuse">No ${assetclass ? assetclass.toUpperCase() : 'product'} usage</span>`;
-  } else if (usage === 'uses') {
-    const lbl = product || muniproduct || (assetclass ? assetclass.toUpperCase() : 'Products');
-    badges += `<span class="r-badge rb-partial">Uses ${(lbl).toUpperCase()}</span>`;
-  }
-
-  // Territory badge
-  badges += `<span class="r-badge rb-terr">${adv.territory}</span>`;
-
-  // Manually added badge
-  if (isManual) badges += `<span class="r-badge rb-added">+ Added manually</span>`;
+  // Show which products they have (or highlight missing ones)
+  const prodTags = adv.products.length
+    ? adv.products.map(p => {
+        const isTarget = (products||[]).includes(p);
+        const cls = (investMode==='not' && isTarget) ? 'not-invested' : '';
+        return `<span class="r-prod-tag ${cls}">${p}</span>`;
+      }).join('')
+    : `<span class="r-prod-tag" style="background:#f8fafc;border-color:#e2e8f0;color:#94a3b8;">No products on platform</span>`;
 
   return `
-    <div class="result-row ${isManual ? 'manually-added' : ''}" id="row-${adv.id}">
-      <div class="r-avatar" style="background:${adv.bg};color:${adv.fg};">${adv.initials}</div>
-      <div class="r-info">
-        <div class="r-name">${adv.name}</div>
-        <div class="r-firm">${adv.firm}</div>
-        <div class="r-badges">${badges}</div>
-      </div>
-      <div class="r-right">
-        <div class="r-aum">${adv.aum}</div>
-        <div class="remove-btn" onclick="removeRow(${adv.id})" title="Remove">
-          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    <div class="result-row ${isContacted?'contacted':''} ${isManual?'manually-added':''}" id="row-${adv.id}">
+      <div class="r-avatar" style="background:${bg};color:${fg};">${adv.initials}</div>
+      <div class="r-main">
+        <div class="r-top">
+          <div>
+            <div class="r-name">${adv.name}${isManual?' <span style="font-size:10px;font-weight:500;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:4px;padding:1px 6px;margin-left:4px;">+ Added</span>':''}</div>
+            <div class="r-firm">${adv.firm} · ${adv.territory}</div>
+          </div>
+          <div class="r-actions">
+            ${isContacted
+              ? `<div class="btn-contact" style="pointer-events:none;">
+                   <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+                   Contacted
+                 </div>`
+              : `<button class="btn-contact" onclick="markContacted(${adv.id})">
+                   <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.63 3.47 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6.04 6.04l1.82-1.82a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                   Mark contacted
+                 </button>`}
+            <button class="btn-remove" onclick="removeRow(${adv.id})" title="Remove">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
         </div>
+        <div class="r-phone">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.63 3.47 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6.04 6.04l1.82-1.82a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          ${adv.phone}
+        </div>
+        <div class="r-products">${prodTags}</div>
       </div>
     </div>`;
 }
 
+function markContacted(id) {
+  contacted.add(id);
+  renderResults();
+  const adv = ADVISORS.find(a => a.id === id);
+  showToast(`${adv.name} marked as contacted`);
+}
+
 function removeRow(id) {
-  manuallyAdded.delete(id);
   visibleIds.delete(id);
-  const hasAnyFilter = Object.values(activeFilters).some(v => v !== null);
-  renderResults(hasAnyFilter);
-}
-
-// ── Active chips ─────────────────────────────────────────────────────────
-const FILTER_LABELS = {
-  usage:       { doesnt:'Does not use', uses:'Uses', any:'Any usage' },
-  assetclass:  { etf:'ETFs', muni:'Muni', sma:'SMA', fund:'Mutual Fund' },
-  product:     { jepi:'JEPI', jepq:'JEPQ', jpst:'JPST', jire:'JIRE', 'any-etf':'Any JPM ETF' },
-  muniproduct: { 'muni-etf':'Muni ETF', 'muni-fund':'Muni Fund', 'muni-sma':'Muni SMA' },
-  territory:   { 'A11-East':'A11-East','A14-East':'A14-East','A17-Green':'A17-Green','A22-North':'A22-North','A33-West':'A33-West' },
-};
-
-function renderChips() {
-  const container = document.getElementById('activeChips');
-  const chips = [];
-
-  Object.entries(activeFilters).forEach(([key, val]) => {
-    if (!val) return;
-    const label = FILTER_LABELS[key]?.[val] ?? val;
-    chips.push(`
-      <div class="chip">
-        ${label}
-        <div class="chip-x" onclick="clearFilter('${key}')">
-          <svg width="8" height="8" fill="none" stroke="#1d4ed8" stroke-width="3" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
-        </div>
-      </div>`);
-  });
-
-  container.innerHTML = chips.join('');
-  container.classList.toggle('has-chips', chips.length > 0);
-}
-
-function clearFilter(key) {
-  activeFilters[key] = null;
-  document.querySelectorAll(`[data-filter="${key}"]`).forEach(p => p.classList.remove('active','active-red'));
-  // Cascade
-  if (key === 'assetclass') {
-    activeFilters.product = null;
-    activeFilters.muniproduct = null;
-    document.getElementById('drill-etfproduct').classList.remove('visible');
-    document.getElementById('drill-muniproduct').classList.remove('visible');
-    document.getElementById('drill-assetclass').classList.remove('visible');
-    document.querySelectorAll('[data-filter="product"],[data-filter="muniproduct"]').forEach(p => p.classList.remove('active','active-red'));
-  }
-  if (key === 'usage') {
-    activeFilters.assetclass = null; activeFilters.product = null; activeFilters.muniproduct = null;
-    document.getElementById('drill-assetclass').classList.remove('visible');
-    document.getElementById('drill-etfproduct').classList.remove('visible');
-    document.getElementById('drill-muniproduct').classList.remove('visible');
-    document.querySelectorAll('[data-filter="assetclass"],[data-filter="product"],[data-filter="muniproduct"]').forEach(p => p.classList.remove('active','active-red'));
-  }
-  applyFilters();
-  renderChips();
+  manuallyAdded.delete(id);
+  renderResults();
 }
 
 // ── Search ───────────────────────────────────────────────────────────────
 function handleSearch(val) {
   const dd = document.getElementById('searchDropdown');
   if (!val.trim()) { dd.classList.remove('open'); return; }
-
   const matches = ADVISORS.filter(a =>
     a.name.toLowerCase().includes(val.toLowerCase()) && !visibleIds.has(a.id)
   );
-
   if (!matches.length) { dd.classList.remove('open'); return; }
-
-  dd.innerHTML = matches.slice(0,5).map(a => `
-    <div class="sd-item" onmousedown="addContact(${a.id})">
-      <div class="sd-avatar" style="background:${a.bg};color:${a.fg};">${a.initials}</div>
-      <div>
-        <div class="sd-name">${a.name}</div>
-        <div class="sd-role">${a.firm} · ${a.territory}</div>
-      </div>
+  dd.innerHTML = matches.slice(0,5).map(a => {
+    const { bg, fg } = avatarColors(a.initials);
+    return `<div class="sd-item" onmousedown="addContact(${a.id})">
+      <div class="sd-avatar" style="background:${bg};color:${fg};">${a.initials}</div>
+      <div><div class="sd-name">${a.name}</div><div class="sd-role">${a.firm} · ${a.territory}</div></div>
       <span class="sd-add">+ Add</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   dd.classList.add('open');
 }
 
@@ -628,16 +933,19 @@ function addContact(id) {
   visibleIds.add(id);
   document.getElementById('searchInput').value = '';
   document.getElementById('searchDropdown').classList.remove('open');
-  const hasAnyFilter = Object.values(activeFilters).some(v => v !== null);
-  renderResults(hasAnyFilter);
+  if (!appliedFilters) {
+    // No filters yet — show summary-less state
+    appliedFilters = JSON.parse(JSON.stringify(filterState));
+    document.getElementById('emptyPrompt').style.display = 'none';
+  }
+  renderResults();
   const adv = ADVISORS.find(a => a.id === id);
   showToast(`${adv.name} added to list`);
 }
 
 // ── Create list ──────────────────────────────────────────────────────────
 function createList() {
-  const count = visibleIds.size;
-  showToast(`Call list created with ${count} advisor${count!==1?'s':''} — ready to export`);
+  showToast(`Call list created with ${visibleIds.size} contact${visibleIds.size!==1?'s':''} — ready to export`);
 }
 
 // ── Toast ────────────────────────────────────────────────────────────────
@@ -647,9 +955,6 @@ function showToast(msg) {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2800);
 }
-
-// ── Init ─────────────────────────────────────────────────────────────────
-renderResults(false);
 </script>
 </body>
 </html>
